@@ -5,20 +5,18 @@ import {
   View,
   ImageBackground,
   Image,
-  TouchableOpacity,
-  Text,
   StyleSheet,
   StatusBar,
   Dimensions,
-  Platform,
-  Animated,
   Modal,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import SignUpScreen from "./SignUpScreen";
 import LoginScreen from "./LoginScreen";
+import AuthButton from "../../components/AuthButton";
 
 const googleLogo = require("../../assets/images/google.png");
+const appleLogo = require("../../assets/images/apple-logo.png");
 const logoImage = require("../../assets/images/logo.png");
 const images = [
   require("../../assets/images/image.png"),
@@ -29,7 +27,7 @@ const ch = Math.floor(Math.random() * images.length);
 const bgImage = images[ch];
 
 const { height: windowHeight } = Dimensions.get("window");
-const IMAGE_HEIGHT = windowHeight * 0.5;
+const IMAGE_HEIGHT = windowHeight * 0.45;
 
 const SignInScreen: React.FC = () => {
   const [showSignUp, setShowSignUp] = useState(false);
@@ -37,6 +35,9 @@ const SignInScreen: React.FC = () => {
 
   const handleGoogle = () => {
     /* your Google auth logic */
+  };
+  const handleApple = () => {
+    /* Apple auth logic */
   };
   const handleSignUp = () => setShowSignUp(true);
   const handleLogin = () => setShowLogin(true);
@@ -59,29 +60,35 @@ const SignInScreen: React.FC = () => {
       <View style={styles.content}>
         <Image source={logoImage} style={styles.logo} />
 
-        <TouchableOpacity
-          style={[styles.button, styles.googleButton]}
+        <AuthButton
+          label="Continue with Apple"
+          onPress={handleApple}
+          icon={<Image source={appleLogo} style={styles.iconImage} />}
+          style={styles.appleButton}
+          textStyle={styles.appleText}
+        />
+
+        <AuthButton
+          label="Continue with Google"
           onPress={handleGoogle}
-        >
-          <Image source={googleLogo} style={styles.iconImage} />
-          <Text style={[styles.buttonText, styles.googleText]}>
-            Continue with Google
-          </Text>
-        </TouchableOpacity>
+          icon={<Image source={googleLogo} style={styles.iconImage} />}
+          style={styles.googleButton}
+          textStyle={styles.googleText}
+        />
 
-        <TouchableOpacity
-          style={[styles.button, styles.signUpButton]}
+        <AuthButton
+          label="Sign up"
           onPress={handleSignUp}
-        >
-          <Text style={[styles.buttonText, styles.signUpText]}>Sign up</Text>
-        </TouchableOpacity>
+          style={styles.signUpButton}
+          textStyle={styles.signUpText}
+        />
 
-        <TouchableOpacity
-          style={[styles.button, styles.loginButton]}
-          onPress={handleLogin}
-        >
-          <Text style={[styles.buttonText, styles.loginText]}>Log in</Text>
-        </TouchableOpacity>
+        <AuthButton
+          label="Log in"
+          onPress={() => setShowLogin(true)}
+          style={styles.loginButton}
+          textStyle={styles.loginText}
+        />
       </View>
 
       {/* —— Slide‑up SignUp modal —— */}
@@ -129,20 +136,14 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
     marginBottom: 24,
   },
-  button: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    borderRadius: 50,
-    paddingVertical: 14,
-    marginVertical: 8,
-    justifyContent: "center",
-  },
-  iconImage: { width: 18, height: 18, marginRight: 12 },
+  iconImage: { width: 18, height: 18 },
   buttonText: { fontSize: 16, fontWeight: "600" },
 
-  googleButton: { backgroundColor: "#444" },
-  googleText: { color: "#FFF" },
+  googleButton: { backgroundColor: "#FFF" },
+  googleText: { color: "#000" },
+
+  appleButton: { backgroundColor: "#FFF" },
+  appleText: { color: "#000" },
 
   signUpButton: { backgroundColor: "#444" },
   signUpText: { color: "#FFF" },

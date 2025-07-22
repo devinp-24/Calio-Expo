@@ -10,7 +10,7 @@ app.use(cors());
 
 const PORT = 4000;
 const SECRET = 'mock-secret';
-const EXPIRY = '5s';
+const EXPIRY = '60s';
 
 let users = []; // our “DB”
 let nextId = 1;
