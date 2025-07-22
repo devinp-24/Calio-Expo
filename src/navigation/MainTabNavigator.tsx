@@ -2,6 +2,7 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import ChatScreen from "../screens/ChatScreen";
 
 // Stub views for each tab
 function ChatHome() {
@@ -60,7 +61,7 @@ export default function MainTabNavigator() {
         tabBarInactiveTintColor: "#999",
       })}
     >
-      <Tab.Screen name="Chat" component={ChatHome} />
+      <Tab.Screen name="Chat" component={ChatScreen} />
       <Tab.Screen name="Explore" component={Explore} />
       <Tab.Screen name="Fitness" component={Fitness} />
       <Tab.Screen name="Account" component={Account} />
