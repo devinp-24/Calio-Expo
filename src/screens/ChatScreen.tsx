@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import QuickAccessButton from "../components/QuickAccessButton";
 
 // put your real logo in /assets/logo.png
-const logo = require("../../assets/logo.png");
+const logo = require("../assets/images/calio-orange-logo.png");
 
 const mockQuickTexts = [
   "What's for dinner?",
@@ -45,7 +45,7 @@ export default function ChatScreen() {
 
       {/* ─── Logo ──────────────────────────────────────── */}
       <View style={styles.logoWrapper}>
-        <Image source={logo} style={styles.logo} resizeMode="contain" />
+        <Image source={logo} style={styles.logo} />
       </View>
 
       {/* ─── Quick-Access Buttons ─────────────────────── */}
@@ -84,19 +84,20 @@ const styles = StyleSheet.create({
   },
 
   logoWrapper: {
+    width: "100%",
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
   logo: {
-    width: width * 0.5,
+    width: width * 0.8,
     height: width * 0.2,
   },
 
   quickContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    justifyContent: "center",
     paddingHorizontal: H_PADDING,
     marginBottom: 12,
   },
