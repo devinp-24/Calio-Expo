@@ -6,14 +6,14 @@ import React, {
   useState,
   useEffect,
   ReactNode,
-} from 'react';
-import { Platform, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { jwtDecode } from 'jwt-decode';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootParamList } from '../navigation/types';
-import { login, signup } from '../services/auth';
+} from "react";
+import { Platform, Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { jwtDecode } from "jwt-decode";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RootParamList } from "../navigation/types";
+import { login, signup } from "../services/auth";
 
 type Payload = { exp: number; email: string };
 
@@ -47,10 +47,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       } else {
         setTimeout(() => {
           Alert.alert(
-            'Session expired',
-            'Please log in again.',
-            [{ text: 'OK', onPress: () => {} }],
-            { cancelable: false },
+            "Session expired",
+            "Please log in again.",
+            [{ text: "OK", onPress: () => {} }],
+            { cancelable: false }
           );
           signOut();
         }, msUntilExpiry);
@@ -64,33 +64,26 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   // On mount: load stored values and redirect appropriately
   useEffect(() => {
     (async () => {
-      const storedEmail = await AsyncStorage.getItem('email');
-      const storedToken = await AsyncStorage.getItem('token');
+      const storedEmail = await AsyncStorage.getItem("email");
+      const storedToken = await AsyncStorage.getItem("token");
 
       if (storedToken) {
         try {
           const { exp }: Payload = jwtDecode(storedToken);
           if (exp * 1000 > Date.now()) {
-            // Token still valid → go Home
+            // Token still valid → restore state but DO NOT auto‐navigate
             setEmail(storedEmail);
             setToken(storedToken);
-            nav.reset({
-              index: 0,
-              routes: [{ name: 'Home' }],
-            });
             scheduleExpiry(storedToken);
             return;
           }
         } catch {
           // invalid token
         }
-        // Token expired or invalid → clear & go to SignIn
-        await AsyncStorage.removeItem('token');
+        // Token expired or invalid → clear
+        await AsyncStorage.removeItem("token");
         setToken(null);
-        nav.reset({
-          index: 0,
-          routes: [{ name: 'SignIn' }],
-        });
+        // (we stay on SignIn by default)
         return;
       }
 
@@ -103,11 +96,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
   // Persist credentials, navigate to Home, and schedule expiry
   const persist = async (newEmail: string, newToken: string) => {
-    await AsyncStorage.setItem('email', newEmail);
-    await AsyncStorage.setItem('token', newToken);
+    await AsyncStorage.setItem("email", newEmail);
+    await AsyncStorage.setItem("token", newToken);
     setEmail(newEmail);
     setToken(newToken);
-    nav.reset({ index: 0, routes: [{ name: 'Home' }] });
+    nav.reset({ index: 0, routes: [{ name: "Home" }] });
     scheduleExpiry(newToken);
   };
 
@@ -125,10 +118,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
   // Sign-out flow
   const signOut = async () => {
-    await AsyncStorage.multiRemove(['email', 'token']);
+    await AsyncStorage.multiRemove(["email", "token"]);
     setEmail(null);
     setToken(null);
-    nav.reset({ index: 0, routes: [{ name: 'SignIn' }] });
+    nav.reset({ index: 0, routes: [{ name: "SignIn" }] });
   };
 
   return (
@@ -141,7 +134,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 export const useAuth = (): AuthContextType => {
   const ctx = useContext(AuthContext);
   if (!ctx) {
-    throw new Error('useAuth must be inside AuthProvider');
+    throw new Error("useAuth must be inside AuthProvider");
   }
   return ctx;
 };
