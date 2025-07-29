@@ -1,18 +1,21 @@
-import React from "react";
+// src/screens/ChatScreen.tsx
+import React, { useState, useEffect } from "react";
 import {
   SafeAreaView,
   View,
+  Text,
   TextInput,
   StyleSheet,
   Image,
   TouchableOpacity,
   Dimensions,
   Platform,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import QuickAccessButton from "../components/QuickAccessButton";
+import * as Haptics from "expo-haptics";
 
-// put your real logo in /assets/logo.png
+// Your logo asset
 const logo = require("../assets/images/calio-orange-logo.png");
 
 const mockQuickTexts = [
@@ -22,106 +25,155 @@ const mockQuickTexts = [
   "Dinner for two?",
 ];
 
+const { width, height } = Dimensions.get("window");
+const LOGO_HEIGHT = 60;
+const INPUT_BOTTOM = Platform.OS === "ios" ? 100 : 70;
+const INPUT_WIDTH = width - 32;
+const INPUT_BAR_HEIGHT = Platform.OS === "ios" ? 56 : 48;
+const QUICK_GAP = 8;
+
+// the full text you want to “type out”
+const FULL_INTRO = "Hi Rishav!\nWhat are you in the mood for today?";
+
 export default function ChatScreen() {
+  const [displayedText, setDisplayedText] = useState("");
+
+  useEffect(() => {
+    // 1) Fire a light haptic tap once, when typing starts:
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
+    let idx = 1; // start at 1 so slice(0,1) === "H"
+    const timer = setInterval(() => {
+      if (idx <= FULL_INTRO.length) {
+        // Take the first `idx` characters from the string
+        setDisplayedText(FULL_INTRO.slice(0, idx));
+        idx++;
+      } else {
+        // Once we've shown the full string, stop
+        clearInterval(timer);
+      }
+    }, 40); // 50ms per character—tweak for speed
+
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* ─── Top Bar ───────────────────────────────────── */}
+      {/* Top Bar */}
       <View style={styles.topBar}>
-        <TouchableOpacity
-          onPress={() => {
-            /* TODO: open history */
-          }}
-        >
+        <TouchableOpacity>
           <Ionicons name="time-outline" size={24} color="#000" />
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => {
-            /* TODO: share */
-          }}
-        >
+        <TouchableOpacity>
           <Ionicons name="share-outline" size={24} color="#000" />
         </TouchableOpacity>
       </View>
 
-      {/* ─── Logo ──────────────────────────────────────── */}
-      <View style={styles.logoWrapper}>
+      {/* Logo */}
+      <View style={styles.logoArea}>
         <Image source={logo} style={styles.logo} />
       </View>
 
-      {/* ─── Quick-Access Buttons ─────────────────────── */}
-      <View style={styles.quickContainer}>
-        {mockQuickTexts.map((text, i) => (
-          <QuickAccessButton key={i} label={text} onPress={() => {}} />
-        ))}
+      {/* Typing Intro */}
+      <View style={styles.textArea}>
+        <Text style={styles.introText}>{displayedText}</Text>
       </View>
 
-      {/* ─── Chat Input Bar ───────────────────────────── */}
-      <View style={styles.inputBar}>
-        <TextInput
-          style={styles.input}
-          placeholder="Ask something"
-          placeholderTextColor="#666"
-        />
-        <TouchableOpacity style={styles.sendButton} onPress={() => {}}>
-          <Ionicons name="arrow-up" size={20} color="#FFF" />
-        </TouchableOpacity>
+      {/* Quick-Access Scroll */}
+      <View style={styles.quickScrollWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.quickContainer}
+        >
+          {mockQuickTexts.map((text, i) => (
+            <View key={i} style={styles.quickItemWrapper}>
+              <Text style={styles.quickText}>{text}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Floating Input Bar */}
+      <View style={styles.inputWrapper}>
+        <View style={styles.inputBar}>
+          <TextInput
+            style={styles.input}
+            placeholder="Ask something"
+            placeholderTextColor="#666"
+          />
+          <TouchableOpacity style={styles.sendButton}>
+            <Ionicons name="arrow-up" size={18} color="#FFF" />
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
 }
 
-const { width } = Dimensions.get("window");
-const H_PADDING = 16;
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF" },
-
   topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: H_PADDING,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
-
-  logoWrapper: {
-    width: "100%",
-    flex: 1,
-    justifyContent: "center",
+  logoArea: {
+    position: "absolute",
+    width,
+    paddingTop: 45,
+    height: LOGO_HEIGHT,
+    justifyContent: "flex-start",
     alignItems: "center",
   },
-  logo: {
-    width: width * 0.8,
-    height: width * 0.2,
+  logo: { width: 80, height: 45, resizeMode: "contain" },
+  textArea: { flex: 1, justifyContent: "center", alignItems: "center" },
+  introText: {
+    textAlign: "center",
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#333",
+    lineHeight: 24,
   },
-
-  quickContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    paddingHorizontal: H_PADDING,
-    marginBottom: 12,
+  quickScrollWrapper: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: INPUT_BOTTOM + INPUT_BAR_HEIGHT + QUICK_GAP,
+    height: 48,
+    alignItems: "center",
   },
-
+  quickContainer: { paddingHorizontal: 16, alignItems: "center" },
+  quickItemWrapper: {
+    borderWidth: 1,
+    borderColor: "#DDD",
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginRight: 12,
+    backgroundColor: "#FFF",
+  },
+  quickText: { fontSize: 14, color: "#333" },
+  inputWrapper: {
+    position: "absolute",
+    bottom: INPUT_BOTTOM,
+    width: INPUT_WIDTH,
+    alignSelf: "center",
+  },
   inputBar: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: H_PADDING,
-    paddingVertical: Platform.OS === "ios" ? 12 : 8,
-    borderTopWidth: 1,
-    borderColor: "#EEE",
-  },
-  input: {
-    flex: 1,
     backgroundColor: "#F2F2F2",
-    borderRadius: 20,
-    paddingVertical: Platform.OS === "ios" ? 10 : 6,
+    borderRadius: 30,
     paddingHorizontal: 16,
-    marginRight: 8,
-    fontSize: 16,
+    paddingVertical: Platform.OS === "ios" ? 8 : 6,
   },
+  input: { flex: 1, fontSize: 16, color: "#000" },
   sendButton: {
     backgroundColor: "#000",
     borderRadius: 20,
     padding: 10,
+    marginLeft: 8,
   },
 });

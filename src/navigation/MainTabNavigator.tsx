@@ -3,6 +3,9 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import ChatScreen from "../screens/ChatScreen";
+import { Dimensions } from "react-native";
+
+const { height: wHeight } = Dimensions.get("window");
 
 // Stub views for each tab
 function ChatHome() {
@@ -47,6 +50,7 @@ export default function MainTabNavigator() {
           backgroundColor: "#000",
           borderTopWidth: 0,
           paddingTop: 3,
+          height: wHeight * 0.1,
         },
         tabBarIcon: ({ color, size }) => {
           let iconName: React.ComponentProps<typeof Ionicons>["name"] =
