@@ -1,5 +1,5 @@
 // src/screens/Auth/LoginScreen.tsx
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -10,14 +10,14 @@ import {
   StatusBar,
   ScrollView,
   Alert,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { AuthStackParamList } from '../../navigation/AuthNavigator';
-import { useAuth } from '../../context/AuthContext'; // ← import useAuth
-import colors from '../../theme/colors';
-import spacing from '../../theme/spacing';
-import typography from '../../theme/typography';
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { AuthStackParamList } from "../../navigation/AuthNavigator";
+import { useAuth } from "../../context/AuthContext"; // ← import useAuth
+import colors from "../../theme/colors";
+import spacing from "../../theme/spacing";
+import typography from "../../theme/typography";
 
 // 1️⃣ Declare the onClose prop
 type LoginScreenProps = {
@@ -25,10 +25,10 @@ type LoginScreenProps = {
 };
 const LoginScreen: React.FC<LoginScreenProps> = ({ onClose }) => {
   const navigation =
-    useNavigation<NativeStackNavigationProp<AuthStackParamList, 'SignIn'>>();
+    useNavigation<NativeStackNavigationProp<AuthStackParamList, "SignIn">>();
   const { signIn } = useAuth(); // ← get signIn from context
-  const [identifier, setIdentifier] = useState(''); // username or email
-  const [password, setPassword] = useState('');
+  const [identifier, setIdentifier] = useState(""); // username or email
+  const [password, setPassword] = useState("");
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -38,10 +38,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onClose }) => {
   const handleLogin = async () => {
     if (!canSubmit) return;
     try {
-      await signIn(identifier, password);
+      await signIn(identifier);
       // navigation to Home is handled by AuthContext
     } catch (err: any) {
-      Alert.alert('Login failed', err.message || 'An error occurred');
+      Alert.alert("Login failed", err.message || "An error occurred");
     }
   };
 
@@ -66,12 +66,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onClose }) => {
         {/* Username or Email */}
         <Text style={styles.label}>Username or email</Text>
         <TextInput
-          style={[styles.input, focusedField === 'id' && styles.inputFocused]}
+          style={[styles.input, focusedField === "id" && styles.inputFocused]}
           placeholder="you@example.com"
-          placeholderTextColor={colors.onSurface + '88'}
+          placeholderTextColor={colors.onSurface + "88"}
           value={identifier}
           onChangeText={setIdentifier}
-          onFocus={() => setFocusedField('id')}
+          onFocus={() => setFocusedField("id")}
           onBlur={() => setFocusedField(null)}
         />
 
@@ -81,22 +81,22 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onClose }) => {
           <TextInput
             style={[
               styles.input,
-              focusedField === 'pwd' && styles.inputFocused,
+              focusedField === "pwd" && styles.inputFocused,
             ]}
             placeholder="••••••••"
-            placeholderTextColor={colors.onSurface + '88'}
+            placeholderTextColor={colors.onSurface + "88"}
             secureTextEntry={!showPassword}
             value={password}
             onChangeText={setPassword}
-            onFocus={() => setFocusedField('pwd')}
+            onFocus={() => setFocusedField("pwd")}
             onBlur={() => setFocusedField(null)}
           />
           <TouchableOpacity
             style={styles.showToggle}
-            onPress={() => setShowPassword(v => !v)}
+            onPress={() => setShowPassword((v) => !v)}
           >
             <Text style={styles.showText}>
-              {showPassword ? 'Hide' : 'Show'}
+              {showPassword ? "Hide" : "Show"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -128,13 +128,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   header: {
     height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: spacing.md,
   },
   close: {
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   title: {
     color: colors.onBackground,
     fontSize: typography.lg,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   form: {
     padding: spacing.md,
@@ -156,14 +156,14 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   inputWrapper: {
-    position: 'relative',
+    position: "relative",
   },
   input: {
     marginTop: spacing.xs,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.onSurface + '66',
+    borderColor: colors.onSurface + "66",
     borderRadius: 8,
     color: colors.onBackground,
   },
@@ -171,15 +171,15 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
   },
   showToggle: {
-    position: 'absolute',
+    position: "absolute",
     right: spacing.md,
-    height: '100%', // full height of wrapper
-    justifyContent: 'center', // centers its child vertically
+    height: "100%", // full height of wrapper
+    justifyContent: "center", // centers its child vertically
   },
   showText: {
     color: colors.accent,
     fontSize: typography.sm,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   forgot: {
     marginTop: spacing.sm,
@@ -188,18 +188,18 @@ const styles = StyleSheet.create({
   },
   submit: {
     marginTop: spacing.lg,
-    backgroundColor: 'rgba(244,92,29,1)',
+    backgroundColor: "rgba(244,92,29,1)",
     paddingVertical: spacing.md,
     borderRadius: 50,
-    alignItems: 'center',
+    alignItems: "center",
   },
   submitDisabled: {
-    backgroundColor: colors.onSurface + '66',
+    backgroundColor: colors.onSurface + "66",
   },
   submitText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: typography.button,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 

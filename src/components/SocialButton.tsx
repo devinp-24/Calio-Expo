@@ -1,14 +1,14 @@
-import React from 'react';
+import React from "react";
 import {
   TouchableOpacity,
   Text,
   StyleSheet,
   View,
   ViewStyle,
-} from 'react-native';
-import colors from '../theme/colors';
-import typography from '../theme/typography';
-import spacing from '../theme/spacing';
+} from "react-native";
+import colors from "../theme/colors";
+import typography from "../theme/typography";
+import spacing from "../theme/spacing";
 
 interface SocialButtonProps {
   label: string;
@@ -35,11 +35,11 @@ const SocialButton: React.FC<SocialButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: colors.surface,
     borderRadius: spacing.sm,
     paddingVertical: spacing.sm,
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: spacing.xs,
   },
   iconContainer: {
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   },
   text: {
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: typography.button,
     color: colors.onSurface,
   },

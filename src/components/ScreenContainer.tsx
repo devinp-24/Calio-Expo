@@ -1,12 +1,12 @@
-import React from 'react';
+import React from "react";
 import {
   SafeAreaView,
   StyleSheet,
   ViewStyle,
   ImageBackground,
-} from 'react-native';
-import spacing from '../theme/spacing';
-import colors from '../theme/colors';
+} from "react-native";
+import spacing from "../theme/spacing";
+import colors from "../theme/colors";
 
 interface ScreenContainerProps {
   children: React.ReactNode;
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
   },
   image: {
     flex: 1,
-    resizeMode: 'cover',
+    resizeMode: "cover",
     paddingHorizontal: spacing.lg,
   },
 });

@@ -2,7 +2,7 @@
 import { Platform } from "react-native";
 
 // src/services/auth.ts
-export const BASE_URL = "http://192.168.1.17:4000";
+export const BASE_URL = "http://192.168.0.104:4000";
 
 type TokenResponse = { token: string };
 
