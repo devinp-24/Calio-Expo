@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { Keyboard } from "react-native";
 
 // Pull in your hook and bubble component
 import { useChat, Message } from "../hooks/useChat";
@@ -33,7 +34,7 @@ const mockQuickTexts = [
 
 const { width } = Dimensions.get("window");
 const LOGO_HEIGHT = 60;
-const INPUT_BOTTOM = Platform.OS === "ios" ? 100 : 70;
+const INPUT_BOTTOM = Platform.OS === "ios" ? 50 : 20;
 const INPUT_WIDTH = width - 32;
 const INPUT_BAR_HEIGHT = Platform.OS === "ios" ? 56 : 48;
 const QUICK_GAP = 8;
@@ -45,6 +46,7 @@ export default function ChatScreen() {
 
   // For typing effect of the AI greeting
   const [displayedText, setDisplayedText] = useState("");
+  const [kbdHeight, setKbdHeight] = useState(0);
 
   // Kick off the haptic + typing animation once the greeting arrives
   useEffect(() => {
@@ -66,6 +68,21 @@ export default function ChatScreen() {
       return () => clearInterval(timer);
     }
   }, [messages, hasStarted]);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      (e) => setKbdHeight(e.endCoordinates.height - 100)
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => setKbdHeight(0)
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   // When the user taps Send...
   const onSend = () => {
@@ -98,10 +115,25 @@ export default function ChatScreen() {
         {!hasStarted ? (
           <>
             {/* ① Typing intro of the real AI greeting */}
-            <Text style={styles.introText}>{displayedText}</Text>
+            <Text
+              style={[
+                styles.introText,
+                { marginBottom: INPUT_BAR_HEIGHT + QUICK_GAP + kbdHeight },
+              ]}
+            >
+              {displayedText}
+            </Text>
 
             {/* ② Quick‑access scroll (unchanged) */}
-            <View style={styles.quickScrollWrapper}>
+            <View
+              style={[
+                styles.quickScrollWrapper,
+                {
+                  bottom:
+                    INPUT_BOTTOM + INPUT_BAR_HEIGHT + QUICK_GAP + kbdHeight,
+                },
+              ]}
+            >
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -132,7 +164,15 @@ export default function ChatScreen() {
       </View>
 
       {/* Floating Input Bar (always present) */}
-      <View style={styles.inputWrapper}>
+      <View
+        style={[
+          styles.inputWrapper,
+          {
+            // lift it up by exactly the keyboard height
+            bottom: INPUT_BOTTOM + kbdHeight,
+          },
+        ]}
+      >
         <View style={styles.inputBar}>
           <TextInput
             style={styles.input}
@@ -215,7 +255,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: INPUT_BAR_HEIGHT + QUICK_GAP + 8,
+    bottom: INPUT_BAR_HEIGHT + QUICK_GAP + INPUT_BOTTOM,
     height: 48,
     alignItems: "center",
   },
@@ -233,7 +273,7 @@ const styles = StyleSheet.create({
 
   inputWrapper: {
     position: "absolute",
-    bottom: INPUT_BOTTOM - 50,
+    bottom: INPUT_BOTTOM,
     width: INPUT_WIDTH,
     alignSelf: "center",
   },

@@ -142,6 +142,7 @@ Respond with only the JSON object—no extra text.
         ? `${ctx}\n\n${greetingMemoryPrompt}`
         : `${ctx}\n\n${freshSuggestionsPrompt}`;
 
+      console.log(prompt);
       const aiRaw = await chatWithAgent([], prompt);
       const aiMsg: Message = {
         role: aiRaw.role as any,
