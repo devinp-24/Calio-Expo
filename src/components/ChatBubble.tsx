@@ -1,6 +1,6 @@
 // components/ChatBubble.tsx
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Platform } from "react-native";
 
 export type ChatBubbleProps = {
   content: string;
@@ -74,14 +74,32 @@ const styles = StyleSheet.create({
   bubble: {
     maxWidth: "80%",
     padding: 12,
-    borderRadius: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 2, height: 3 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   bubbleBot: {
-    backgroundColor: "#FFF5B1",
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    borderBottomRightRadius: 18,
+    borderBottomLeftRadius: 4,
+    backgroundColor: "#FFF3E0",
     alignSelf: "flex-start",
   },
   bubbleUser: {
-    backgroundColor: "#D3F8E2",
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    borderBottomRightRadius: 4,
+    borderBottomLeftRadius: 18,
+    backgroundColor: "#E0F7FA",
     alignSelf: "flex-end",
   },
   content: {
