@@ -50,7 +50,8 @@ const SignUpScreen: React.FC<SignUpProps> = ({ onClose }) => {
     setLoading(true);
     try {
       // only email & password are needed for our mock API
-      await signUp(email);
+      await signUp(username, email, password);
+
       // on success, AuthContext will navigate to Home
     } catch (err: any) {
       Alert.alert("Sign up failed", err.message);

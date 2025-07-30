@@ -38,7 +38,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onClose }) => {
   const handleLogin = async () => {
     if (!canSubmit) return;
     try {
-      await signIn(identifier);
+      await signIn(identifier, identifier, password);
       // navigation to Home is handled by AuthContext
     } catch (err: any) {
       Alert.alert("Login failed", err.message || "An error occurred");

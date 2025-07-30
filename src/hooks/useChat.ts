@@ -13,6 +13,7 @@ import {
 import { chatWithAgent } from "../api/openai";
 import * as Location from "expo-location";
 import { Platform } from "react-native";
+import { useAuth } from "../context/AuthContext";
 
 export type Button = {
   label: string;
@@ -38,12 +39,13 @@ type Memory = {
 };
 
 const { extra } = Constants.manifest2 ?? Constants.expoConfig ?? {};
-const API_BASE: string = extra?.API_BASE ?? "http://192.168.0.104:3001/api";
+const API_BASE: string = extra?.API_BASE ?? "http://192.168.0.103:3001/api";
 
 export function useChat() {
   const pageRef = useRef(0);
   const allRestaurantsRef = useRef<any[]>([]);
   const fullOptionsRef = useRef<any[]>([]);
+  const { username } = useAuth();
 
   const extractor = new OpenAI({
     apiKey: "",
@@ -133,6 +135,7 @@ Respond with only the JSON object—no extra text.
       const tod = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening";
 
       let ctx = `Context — timeOfDay: ${tod}.`;
+
       if (memory?.lastOrder) ctx += ` lastOrder: ${memory.lastOrder}.`;
       if (memory?.cuisine) ctx += ` favoriteCuisine: ${memory.cuisine}.`;
       if (memory?.mood) ctx += ` mood: ${memory.mood}.`;
@@ -140,9 +143,11 @@ Respond with only the JSON object—no extra text.
 
       const prompt = memory?.cuisine
         ? `${ctx}\n\n${greetingMemoryPrompt}`
-        : `${ctx}\n\n${freshSuggestionsPrompt}`;
+        : `${ctx}\n\n${freshSuggestionsPrompt.replace(
+            "{userName}",
+            username ?? "there"
+          )}`;
 
-      console.log(prompt);
       const aiRaw = await chatWithAgent([], prompt);
       const aiMsg: Message = {
         role: aiRaw.role as any,
@@ -509,15 +514,15 @@ Respond with ONLY the JSON object—no extra text.
           .replace("{cuisine}", curCuisine)
           .replace("{serviceType}", curService);
 
-        // const sugRaw = await chatWithAgent(
-        //   [{ role: "user", content: textList }],
-        //   sumPrompt
-        // );
-        // const sugMsg: Message = {
-        //   role: sugRaw.role as any,
-        //   content: sugRaw.content ?? "",
-        // };
-        // setMessages((ms) => [...ms, sugMsg]);
+        const sugRaw = await chatWithAgent(
+          [{ role: "user", content: textList }],
+          sumPrompt
+        );
+        const sugMsg: Message = {
+          role: sugRaw.role as any,
+          content: sugRaw.content ?? "",
+        };
+        setMessages((ms) => [...ms, sugMsg]);
       } catch (e) {
         console.error("Restaurant lookup failed:", e);
       }
@@ -577,15 +582,15 @@ Respond with ONLY the JSON object—no extra text.
           const sumPrompt2 = restaurantSuggestionsPrompt
             .replace("{cuisine}", curCuisine!)
             .replace("{serviceType}", curService!);
-          // const moreRaw = await chatWithAgent(
-          //   [{ role: "user", content: textList2 }],
-          //   sumPrompt2
-          // );
-          // const moreMsg: Message = {
-          //   role: moreRaw.role as any,
-          //   content: moreRaw.content ?? "",
-          // };
-          // setMessages((ms) => [...ms, moreMsg]);
+          const moreRaw = await chatWithAgent(
+            [{ role: "user", content: textList2 }],
+            sumPrompt2
+          );
+          const moreMsg: Message = {
+            role: moreRaw.role as any,
+            content: moreRaw.content ?? "",
+          };
+          setMessages((ms) => [...ms, moreMsg]);
           return;
         case "pick":
           let idx: number;

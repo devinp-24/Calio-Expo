@@ -20,11 +20,28 @@
 //   );
 // }
 import React from "react";
+import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import AuthNavigator from "./AuthNavigator";
 import MainTabNavigator from "./MainTabNavigator";
 
 export default function AppNavigator() {
-  const { token } = useAuth();
+  const { token, loading } = useAuth();
+  console.log("loading: " + loading);
+
+  // 1) Still validating token? Show a spinner.
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  // 2) Once loading=false, pick the correct navigator
   return token == null ? <AuthNavigator /> : <MainTabNavigator />;
 }
+
+const styles = StyleSheet.create({
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+});
