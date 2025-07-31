@@ -25,7 +25,6 @@ import ChatBubble from "../components/ChatBubble";
 // Your logo asset
 const logo = require("../assets/images/calio-orange-logo.png");
 
-// Mock quick-access pills
 const mockQuickTexts = [
   "What's for dinner?",
   "Lunch ideas?",
@@ -209,14 +208,12 @@ export default function ChatScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF" },
-
   topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingTop: 12,
   },
-
   logoArea: {
     position: "absolute",
     width,
@@ -245,7 +242,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginHorizontal: 16,
   },
-
   quickScrollWrapper: {
     position: "absolute",
     left: 0,
@@ -265,7 +261,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
   },
   quickText: { fontSize: 14, color: "#333" },
-
   chatContainer: {
     flex: 1,
     paddingTop: 3,
@@ -273,7 +268,6 @@ const styles = StyleSheet.create({
   },
   chatList: { flex: 1 },
   chatContent: { paddingHorizontal: 16 },
-
   inputWrapper: {
     position: "absolute",
     width: INPUT_WIDTH,
