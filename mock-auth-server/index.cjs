@@ -9,6 +9,7 @@ app.use(express.json());
 app.use(cors());
 
 const PORT = 4000;
+
 const SECRET = "mock-secret";
 const EXPIRY = "1h";
 

@@ -1,15 +1,14 @@
-// App.tsx
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import AppNavigator from './src/navigation/AppNavigator';
-import { AuthProvider } from './src/context/AuthContext';
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { AuthProvider } from "./src/context/AuthContext";
+import AppNavigator from "./src/navigation/AppNavigator";
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <AuthProvider>
+    <AuthProvider>
+      <NavigationContainer>
         <AppNavigator />
-      </AuthProvider>
-    </NavigationContainer>
+      </NavigationContainer>
+    </AuthProvider>
   );
 }
