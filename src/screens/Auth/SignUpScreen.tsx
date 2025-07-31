@@ -1,5 +1,5 @@
 // src/screens/Auth/SignUpScreen.tsx
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -11,12 +11,12 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-} from 'react-native';
-import { useAuth } from '../../context/AuthContext';
+} from "react-native";
+import { useAuth } from "../../context/AuthContext";
 
-import colors from '../../theme/colors';
-import spacing from '../../theme/spacing';
-import typography from '../../theme/typography';
+import colors from "../../theme/colors";
+import spacing from "../../theme/spacing";
+import typography from "../../theme/typography";
 
 type SignUpProps = {
   /** Called when the user taps the close (“×”) button */
@@ -26,12 +26,12 @@ type SignUpProps = {
 const SignUpScreen: React.FC<SignUpProps> = ({ onClose }) => {
   const { signUp } = useAuth();
 
-  const [fullName, setFullName] = useState('');
-  const [username, setUsername] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [focused, setFocused] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -50,10 +50,10 @@ const SignUpScreen: React.FC<SignUpProps> = ({ onClose }) => {
     setLoading(true);
     try {
       // only email & password are needed for our mock API
-      await signUp(email, password);
+      await signUp(email);
       // on success, AuthContext will navigate to Home
     } catch (err: any) {
-      Alert.alert('Sign up failed', err.message);
+      Alert.alert("Sign up failed", err.message);
     } finally {
       setLoading(false);
     }
@@ -80,24 +80,24 @@ const SignUpScreen: React.FC<SignUpProps> = ({ onClose }) => {
         {/* Full Name */}
         <Text style={styles.label}>Full Name</Text>
         <TextInput
-          style={[styles.input, focused === 'fullName' && styles.inputFocused]}
+          style={[styles.input, focused === "fullName" && styles.inputFocused]}
           placeholder="Your name"
-          placeholderTextColor={colors.onSurface + '88'}
+          placeholderTextColor={colors.onSurface + "88"}
           value={fullName}
           onChangeText={setFullName}
-          onFocus={() => setFocused('fullName')}
+          onFocus={() => setFocused("fullName")}
           onBlur={() => setFocused(null)}
         />
 
         {/* Username */}
         <Text style={styles.label}>Username</Text>
         <TextInput
-          style={[styles.input, focused === 'username' && styles.inputFocused]}
+          style={[styles.input, focused === "username" && styles.inputFocused]}
           placeholder="choose a username"
-          placeholderTextColor={colors.onSurface + '88'}
+          placeholderTextColor={colors.onSurface + "88"}
           value={username}
           onChangeText={setUsername}
-          onFocus={() => setFocused('username')}
+          onFocus={() => setFocused("username")}
           onBlur={() => setFocused(null)}
         />
 
@@ -108,40 +108,40 @@ const SignUpScreen: React.FC<SignUpProps> = ({ onClose }) => {
         <TextInput
           style={[
             styles.input,
-            focused === 'displayName' && styles.inputFocused,
+            focused === "displayName" && styles.inputFocused,
           ]}
           placeholder="How others see you"
-          placeholderTextColor={colors.onSurface + '88'}
+          placeholderTextColor={colors.onSurface + "88"}
           value={displayName}
           onChangeText={setDisplayName}
-          onFocus={() => setFocused('displayName')}
+          onFocus={() => setFocused("displayName")}
           onBlur={() => setFocused(null)}
         />
 
         {/* Email */}
         <Text style={styles.label}>Email</Text>
         <TextInput
-          style={[styles.input, focused === 'email' && styles.inputFocused]}
+          style={[styles.input, focused === "email" && styles.inputFocused]}
           placeholder="you@example.com"
-          placeholderTextColor={colors.onSurface + '88'}
+          placeholderTextColor={colors.onSurface + "88"}
           keyboardType="email-address"
           autoCapitalize="none"
           value={email}
           onChangeText={setEmail}
-          onFocus={() => setFocused('email')}
+          onFocus={() => setFocused("email")}
           onBlur={() => setFocused(null)}
         />
 
         {/* Create password */}
         <Text style={styles.label}>Create new password</Text>
         <TextInput
-          style={[styles.input, focused === 'password' && styles.inputFocused]}
+          style={[styles.input, focused === "password" && styles.inputFocused]}
           placeholder="••••••••"
-          placeholderTextColor={colors.onSurface + '88'}
+          placeholderTextColor={colors.onSurface + "88"}
           secureTextEntry
           value={password}
           onChangeText={setPassword}
-          onFocus={() => setFocused('password')}
+          onFocus={() => setFocused("password")}
           onBlur={() => setFocused(null)}
         />
         {!isPasswordValid && (
@@ -153,13 +153,13 @@ const SignUpScreen: React.FC<SignUpProps> = ({ onClose }) => {
         {/* Re‑enter password */}
         <Text style={styles.label}>Re‑enter new password</Text>
         <TextInput
-          style={[styles.input, focused === 'confirm' && styles.inputFocused]}
+          style={[styles.input, focused === "confirm" && styles.inputFocused]}
           placeholder="••••••••"
-          placeholderTextColor={colors.onSurface + '88'}
+          placeholderTextColor={colors.onSurface + "88"}
           secureTextEntry
           value={confirm}
           onChangeText={setConfirm}
-          onFocus={() => setFocused('confirm')}
+          onFocus={() => setFocused("confirm")}
           onBlur={() => setFocused(null)}
         />
         {!isMatch && <Text style={styles.error}>Passwords must match</Text>}
@@ -189,13 +189,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   header: {
     height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: spacing.md,
   },
   close: {
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   title: {
     color: colors.onBackground,
     fontSize: typography.lg,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   form: {
     padding: spacing.md,
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   optional: {
-    color: colors.onSurface + '88',
+    color: colors.onSurface + "88",
     fontSize: typography.xs,
   },
   input: {
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.onSurface + '66',
+    borderColor: colors.onSurface + "66",
     borderRadius: 8,
     color: colors.onBackground,
   },
@@ -242,15 +242,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     paddingVertical: spacing.md,
     borderRadius: 50,
-    alignItems: 'center',
+    alignItems: "center",
   },
   submitDisabled: {
-    backgroundColor: colors.onSurface + '66',
+    backgroundColor: colors.onSurface + "66",
   },
   submitText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: typography.button,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 

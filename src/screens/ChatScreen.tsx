@@ -11,12 +11,20 @@ import {
   Dimensions,
   Platform,
   ScrollView,
+  FlatList,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { Keyboard } from "react-native";
+
+// Pull in your hook and bubble component
+import { useChat, Message } from "../hooks/useChat";
+import ChatBubble from "../components/ChatBubble";
 
 // Your logo asset
 const logo = require("../assets/images/calio-orange-logo.png");
+
+// Mock quick‑access pills
 
 const mockQuickTexts = [
   "What's for dinner?",
@@ -25,37 +33,66 @@ const mockQuickTexts = [
   "Dinner for two?",
 ];
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 const LOGO_HEIGHT = 60;
-const INPUT_BOTTOM = Platform.OS === "ios" ? 100 : 70;
+const INPUT_BOTTOM = Platform.OS === "ios" ? 50 : 20;
 const INPUT_WIDTH = width - 32;
 const INPUT_BAR_HEIGHT = Platform.OS === "ios" ? 56 : 48;
 const QUICK_GAP = 8;
 
-// the full text you want to “type out”
-const FULL_INTRO = "Hi Rishav!\nWhat are you in the mood for today?";
-
 export default function ChatScreen() {
+  const { messages, loading, sendMessage } = useChat();
+  const [draft, setDraft] = useState("");
+  const [hasStarted, setHasStarted] = useState(false);
+
+  // For typing effect of the AI greeting
   const [displayedText, setDisplayedText] = useState("");
+  const [kbdHeight, setKbdHeight] = useState(0);
+
+  // Kick off the haptic + typing animation once the greeting arrives
+  useEffect(() => {
+    // Only run if we haven't started the chat and we have a greeting
+    if (!hasStarted && messages.length > 0) {
+      const full = messages[0].content;
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
+      let idx = 1;
+      const timer = setInterval(() => {
+        if (idx <= full.length) {
+          setDisplayedText(full.slice(0, idx));
+          idx++;
+        } else {
+          clearInterval(timer);
+        }
+      }, 40);
+
+      return () => clearInterval(timer);
+    }
+  }, [messages, hasStarted]);
 
   useEffect(() => {
-    // 1) Fire a light haptic tap once, when typing starts:
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-
-    let idx = 1; // start at 1 so slice(0,1) === "H"
-    const timer = setInterval(() => {
-      if (idx <= FULL_INTRO.length) {
-        // Take the first `idx` characters from the string
-        setDisplayedText(FULL_INTRO.slice(0, idx));
-        idx++;
-      } else {
-        // Once we've shown the full string, stop
-        clearInterval(timer);
-      }
-    }, 40); // 50ms per character—tweak for speed
-
-    return () => clearInterval(timer);
+    const showSub = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      (e) => setKbdHeight(e.endCoordinates.height - 100)
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => setKbdHeight(0)
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
   }, []);
+
+  // When the user taps Send...
+  const onSend = () => {
+    const text = draft.trim();
+    if (!text || loading) return;
+    if (!hasStarted) setHasStarted(true);
+    sendMessage(text);
+    setDraft("");
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -74,35 +111,86 @@ export default function ChatScreen() {
         <Image source={logo} style={styles.logo} />
       </View>
 
-      {/* Typing Intro */}
-      <View style={styles.textArea}>
-        <Text style={styles.introText}>{displayedText}</Text>
-      </View>
+      {/* textArea: BEFORE vs AFTER user starts chat */}
+      <View style={[styles.textArea, hasStarted && styles.textAreaChat]}>
+        {!hasStarted ? (
+          <>
+            {/* ① Typing intro of the real AI greeting */}
+            <Text
+              style={[
+                styles.introText,
+                { marginBottom: INPUT_BAR_HEIGHT + QUICK_GAP + kbdHeight },
+              ]}
+            >
+              {displayedText}
+            </Text>
 
-      {/* Quick-Access Scroll */}
-      <View style={styles.quickScrollWrapper}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.quickContainer}
-        >
-          {mockQuickTexts.map((text, i) => (
-            <View key={i} style={styles.quickItemWrapper}>
-              <Text style={styles.quickText}>{text}</Text>
+            {/* ② Quick‑access scroll (unchanged) */}
+            <View
+              style={[
+                styles.quickScrollWrapper,
+                {
+                  bottom:
+                    INPUT_BOTTOM + INPUT_BAR_HEIGHT + QUICK_GAP + kbdHeight,
+                },
+              ]}
+            >
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.quickContainer}
+              >
+                {mockQuickTexts.map((text, i) => (
+                  <View key={i} style={styles.quickItemWrapper}>
+                    <Text style={styles.quickText}>{text}</Text>
+                  </View>
+                ))}
+              </ScrollView>
             </View>
-          ))}
-        </ScrollView>
+          </>
+        ) : (
+          /* CHAT MODE: render *all* messages top→bottom */
+          <View style={styles.chatContainer}>
+            <FlatList<Message>
+              data={messages}
+              keyExtractor={(_, i) => String(i)}
+              renderItem={({ item }) => (
+                <ChatBubble content={item.content} role={item.role} />
+              )}
+              style={styles.chatList}
+              contentContainerStyle={styles.chatContent}
+            />
+          </View>
+        )}
       </View>
 
-      {/* Floating Input Bar */}
-      <View style={styles.inputWrapper}>
+      {/* Floating Input Bar (always present) */}
+      <View
+        style={[
+          styles.inputWrapper,
+          {
+            // lift it up by exactly the keyboard height
+            bottom: INPUT_BOTTOM + kbdHeight,
+          },
+        ]}
+      >
+              
         <View style={styles.inputBar}>
           <TextInput
             style={styles.input}
             placeholder="Ask something"
             placeholderTextColor="#666"
+            value={draft}
+            onChangeText={setDraft}
+            editable={!loading}
+            onSubmitEditing={onSend}
+            returnKeyType="send"
           />
-          <TouchableOpacity style={styles.sendButton}>
+          <TouchableOpacity
+            style={styles.sendButton}
+            onPress={onSend}
+            disabled={loading}
+          >
             <Ionicons name="arrow-up" size={18} color="#FFF" />
           </TouchableOpacity>
         </View>
@@ -128,19 +216,45 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logo: { width: 80, height: 45, resizeMode: "contain" },
-  textArea: { flex: 1, justifyContent: "center", alignItems: "center" },
+
+  // textArea styles
+  textArea: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  textAreaChat: {
+    justifyContent: "flex-start",
+    alignItems: "stretch",
+  },
+
+  // Typing intro text
   introText: {
     textAlign: "center",
     fontSize: 20,
     fontWeight: "600",
     color: "#333",
     lineHeight: 24,
+    marginHorizontal: 16,
+  },
+
+  // Chat container sits between logo and input bar
+  chatContainer: {
+    flex: 1,
+    paddingTop: LOGO_HEIGHT + 16,
+    paddingBottom: INPUT_BAR_HEIGHT + 24,
+  },
+  chatList: {
+    flex: 1,
+  },
+  chatContent: {
+    paddingHorizontal: 16,
   },
   quickScrollWrapper: {
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: INPUT_BOTTOM + INPUT_BAR_HEIGHT + QUICK_GAP,
+    bottom: INPUT_BAR_HEIGHT + QUICK_GAP + INPUT_BOTTOM,
     height: 48,
     alignItems: "center",
   },

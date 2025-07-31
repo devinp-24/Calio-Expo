@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import colors from '../theme/colors';
-import typography from '../theme/typography';
-import spacing from '../theme/spacing';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import colors from "../theme/colors";
+import typography from "../theme/typography";
+import spacing from "../theme/spacing";
 
 const LogoHeader: React.FC = () => (
   <View style={styles.container}>
@@ -12,13 +12,13 @@ const LogoHeader: React.FC = () => (
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: spacing.lg,
   },
   text: {
     color: colors.onBackground,
     fontSize: typography.xxxl,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 
