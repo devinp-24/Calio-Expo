@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { Keyboard } from "react-native";
 
 // Pull in your chat hook and bubble component
 import { useChat, Message } from "../hooks/useChat";
@@ -49,6 +50,7 @@ export default function ChatScreen() {
 
   // Typing-intro state
   const [displayedText, setDisplayedText] = useState("");
+  const [kbdHeight, setKbdHeight] = useState(0);
 
   // Ref for FlatList to control scrolling
   const flatListRef = useRef<FlatList<Message>>(null);

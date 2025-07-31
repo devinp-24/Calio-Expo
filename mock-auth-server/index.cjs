@@ -31,14 +31,14 @@ function signToken(user) {
 
 // Sign up: require email+password, error if already exists
 app.post("/signup", (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, username } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: "Email & password required" });
   }
   if (users.find((u) => u.email === email)) {
     return res.status(409).json({ error: "User already exists" });
   }
-  const user = { id: nextId++, email, password };
+  const user = { id: nextId++, email, password, username };
   users.push(user);
   console.log("📋 Users in DB after signup:", users);
   const token = signToken(user);
@@ -47,8 +47,11 @@ app.post("/signup", (req, res) => {
 
 // Log in: must match email+password
 app.post("/login", (req, res) => {
-  const { email, password } = req.body;
-  const user = users.find((u) => u.email === email && u.password === password);
+  const { email, password, username } = req.body;
+  const user = users.find(
+    (u) =>
+      (u.email === email || u.username === username) && u.password === password
+  );
   if (!user) {
     return res.status(401).json({ error: "Invalid credentials" });
   }
