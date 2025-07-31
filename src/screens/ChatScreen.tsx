@@ -13,6 +13,7 @@ import {
   ScrollView,
   FlatList,
   Keyboard,
+  KeyboardAvoidingView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -34,7 +35,7 @@ const mockQuickTexts = [
 
 const { width } = Dimensions.get("window");
 const LOGO_HEIGHT = 60;
-const INPUT_BOTTOM = Platform.OS === "ios" ? 50 : 20;
+const INPUT_BOTTOM = Platform.OS === "ios" ? 20 : 20;
 const INPUT_WIDTH = width - 32;
 const INPUT_BAR_HEIGHT = Platform.OS === "ios" ? 56 : 48;
 const QUICK_GAP = 8;
@@ -49,9 +50,6 @@ export default function ChatScreen() {
 
   // Typing-intro state
   const [displayedText, setDisplayedText] = useState("");
-
-  // Keyboard height for moving UI
-  const [kbdHeight, setKbdHeight] = useState(0);
 
   // Ref for FlatList to control scrolling
   const flatListRef = useRef<FlatList<Message>>(null);
@@ -76,22 +74,6 @@ export default function ChatScreen() {
     }
   }, [messages, hasStarted]);
 
-  // ② Watch the keyboard to lift suggestions + input
-  useEffect(() => {
-    const showSub = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      (e) => setKbdHeight(e.endCoordinates.height)
-    );
-    const hideSub = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-      () => setKbdHeight(0)
-    );
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
-
   // When the user sends a message
   const onSend = () => {
     const text = draft.trim();
@@ -104,116 +86,124 @@ export default function ChatScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* ─── Top Bar ───────────────────────────────────── */}
-      <View style={styles.topBar}>
-        <TouchableOpacity>
-          <Ionicons name="time-outline" size={24} color="#000" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Ionicons name="share-outline" size={24} color="#000" />
-        </TouchableOpacity>
-      </View>
-
-      {/* ─── Logo ──────────────────────────────────────── */}
-      <View style={styles.logoArea}>
-        <Image source={logo} style={styles.logo} />
-      </View>
-
-      {/* ─── Main Content: intro+quick vs. chat log ────── */}
-      <View style={[styles.textArea, hasStarted && styles.textAreaChat]}>
-        {!hasStarted ? (
-          <>
-            {/* Typing intro */}
-            <Text
-              style={[
-                styles.introText,
-                {
-                  marginBottom: INPUT_BAR_HEIGHT + QUICK_GAP + kbdHeight,
-                },
-              ]}
-            >
-              {displayedText}
-            </Text>
-
-            {/* Quick-access scroll */}
-            <View
-              style={[
-                styles.quickScrollWrapper,
-                {
-                  bottom:
-                    INPUT_BOTTOM + INPUT_BAR_HEIGHT + QUICK_GAP + kbdHeight,
-                },
-              ]}
-            >
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.quickContainer}
-              >
-                {mockQuickTexts.map((text, i) => (
-                  <View key={i} style={styles.quickItemWrapper}>
-                    <Text style={styles.quickText}>{text}</Text>
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
-          </>
-        ) : (
-          // Chat history
-          <View
-            style={[
-              styles.chatContainer,
-              {
-                paddingBottom: INPUT_BAR_HEIGHT + INPUT_BOTTOM + kbdHeight,
-              },
-            ]}
-          >
-            <FlatList<Message>
-              ref={flatListRef}
-              data={messages}
-              keyExtractor={(_, i) => String(i)}
-              renderItem={({ item }) => (
-                <ChatBubble content={item.content} role={item.role} />
-              )}
-              style={styles.chatList}
-              contentContainerStyle={styles.chatContent}
-              onContentSizeChange={() =>
-                flatListRef.current?.scrollToEnd({ animated: true })
-              }
-            />
-          </View>
-        )}
-      </View>
-
-      {/* ─── Floating Input Bar ───────────────────────── */}
-      <View style={[styles.inputWrapper, { bottom: INPUT_BOTTOM + kbdHeight }]}>
-        <View style={styles.inputBar}>
-          <TextInput
-            style={styles.input}
-            placeholder="Ask something"
-            placeholderTextColor="#666"
-            value={draft}
-            onChangeText={(text) => {
-              setDraft(text);
-              // keep scroll at bottom while typing
-              flatListRef.current?.scrollToEnd({ animated: false });
-            }}
-            onFocus={() => flatListRef.current?.scrollToEnd({ animated: true })}
-            editable={!loading}
-            onSubmitEditing={onSend}
-            returnKeyType="send"
-          />
-          <TouchableOpacity
-            style={styles.sendButton}
-            onPress={onSend}
-            disabled={loading}
-          >
-            <Ionicons name="arrow-up" size={18} color="#FFF" />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      // adjust if you have navbars/headers above
+      keyboardVerticalOffset={0}
+    >
+      <SafeAreaView style={styles.container}>
+        {/* ─── Top Bar ───────────────────────────────────── */}
+        <View style={styles.topBar}>
+          <TouchableOpacity>
+            <Ionicons name="time-outline" size={24} color="#000" />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Ionicons name="share-outline" size={24} color="#000" />
           </TouchableOpacity>
         </View>
-      </View>
-    </SafeAreaView>
+
+        {/* ─── Logo ──────────────────────────────────────── */}
+        <View style={styles.logoArea}>
+          <Image source={logo} style={styles.logo} />
+        </View>
+
+        {/* ─── Main Content: intro+quick vs. chat log ────── */}
+        <View style={[styles.textArea, hasStarted && styles.textAreaChat]}>
+          {!hasStarted ? (
+            <>
+              {/* Typing intro */}
+              <Text
+                style={[
+                  styles.introText,
+                  {
+                    marginBottom: INPUT_BAR_HEIGHT + QUICK_GAP,
+                  },
+                ]}
+              >
+                {displayedText}
+              </Text>
+
+              {/* Quick-access scroll */}
+              <View
+                style={[
+                  styles.quickScrollWrapper,
+                  {
+                    bottom: INPUT_BOTTOM + INPUT_BAR_HEIGHT + QUICK_GAP,
+                  },
+                ]}
+              >
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.quickContainer}
+                >
+                  {mockQuickTexts.map((text, i) => (
+                    <View key={i} style={styles.quickItemWrapper}>
+                      <Text style={styles.quickText}>{text}</Text>
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
+            </>
+          ) : (
+            // Chat history
+            <View
+              style={[
+                styles.chatContainer,
+                {
+                  paddingBottom: INPUT_BAR_HEIGHT + INPUT_BOTTOM,
+                },
+              ]}
+            >
+              <FlatList<Message>
+                ref={flatListRef}
+                data={messages}
+                keyExtractor={(_, i) => String(i)}
+                renderItem={({ item }) => (
+                  <ChatBubble content={item.content} role={item.role} />
+                )}
+                style={styles.chatList}
+                contentContainerStyle={styles.chatContent}
+                onContentSizeChange={() =>
+                  flatListRef.current?.scrollToEnd({ animated: true })
+                }
+              />
+            </View>
+          )}
+        </View>
+
+        {/* ─── Floating Input Bar ───────────────────────── */}
+        <View style={[styles.inputWrapper, { bottom: INPUT_BOTTOM }]}>
+          <View style={styles.inputBar}>
+            <TextInput
+              style={styles.input}
+              placeholder="Ask something"
+              placeholderTextColor="#666"
+              value={draft}
+              onChangeText={(text) => {
+                setDraft(text);
+                // keep scroll at bottom while typing
+                flatListRef.current?.scrollToEnd({ animated: false });
+              }}
+              onFocus={() =>
+                flatListRef.current?.scrollToEnd({ animated: true })
+              }
+              editable={!loading}
+              onSubmitEditing={onSend}
+              returnKeyType="send"
+            />
+            <TouchableOpacity
+              style={styles.sendButton}
+              onPress={onSend}
+              disabled={loading}
+            >
+              <Ionicons name="arrow-up" size={18} color="#FFF" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -278,7 +268,7 @@ const styles = StyleSheet.create({
 
   chatContainer: {
     flex: 1,
-    paddingTop: LOGO_HEIGHT + 16,
+    paddingTop: 3,
     paddingBottom: INPUT_BAR_HEIGHT + INPUT_BOTTOM,
   },
   chatList: { flex: 1 },
