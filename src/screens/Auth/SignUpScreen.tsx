@@ -1,4 +1,3 @@
-// src/screens/Auth/SignUpScreen.tsx
 import React, { useState } from "react";
 import {
   SafeAreaView,
@@ -12,20 +11,17 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { useAuth } from "../../context/AuthContext";
-
+import { signup } from "../../services/auth";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import typography from "../../theme/typography";
 
 type SignUpProps = {
-  /** Called when the user taps the close (“×”) button */
   onClose: () => void;
+  onSuccess: (email: string) => void; // <-- added here
 };
 
-const SignUpScreen: React.FC<SignUpProps> = ({ onClose }) => {
-  const { signUp } = useAuth();
-
+const SignUpScreen: React.FC<SignUpProps> = ({ onClose, onSuccess }) => {
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -35,10 +31,9 @@ const SignUpScreen: React.FC<SignUpProps> = ({ onClose }) => {
   const [focused, setFocused] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Validation
   const isPasswordValid = password.length >= 8;
   const isMatch = password === confirm;
-  const allRequiredFilled =
+  const allFilled =
     fullName.trim() &&
     username.trim() &&
     email.trim() &&
@@ -46,15 +41,16 @@ const SignUpScreen: React.FC<SignUpProps> = ({ onClose }) => {
     isMatch;
 
   const handleSignUp = async () => {
-    if (!allRequiredFilled || loading) return;
+    if (!allFilled || loading) return;
     setLoading(true);
     try {
-      // only email & password are needed for our mock API
-      await signUp(username, email, password);
+      // 1) call your backend signup
+      await signup(username, email, password);
 
-      // on success, AuthContext will navigate to Home
+      // 2) if successful, bubble up the email so the parent shows OTP:
+      onSuccess(email);
     } catch (err: any) {
-      Alert.alert("Sign up failed", err.message);
+      Alert.alert("Sign up failed", err.message || "Please try again");
     } finally {
       setLoading(false);
     }
@@ -64,7 +60,7 @@ const SignUpScreen: React.FC<SignUpProps> = ({ onClose }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
-      {/* HEADER */}
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onClose}>
           <Text style={styles.close}>×</Text>
@@ -73,7 +69,7 @@ const SignUpScreen: React.FC<SignUpProps> = ({ onClose }) => {
         <View style={{ width: 24 }} />
       </View>
 
-      {/* FORM */}
+      {/* Form */}
       <ScrollView
         contentContainerStyle={styles.form}
         keyboardShouldPersistTaps="handled"
@@ -133,7 +129,7 @@ const SignUpScreen: React.FC<SignUpProps> = ({ onClose }) => {
           onBlur={() => setFocused(null)}
         />
 
-        {/* Create password */}
+        {/* Password */}
         <Text style={styles.label}>Create new password</Text>
         <TextInput
           style={[styles.input, focused === "password" && styles.inputFocused]}
@@ -147,12 +143,12 @@ const SignUpScreen: React.FC<SignUpProps> = ({ onClose }) => {
         />
         {!isPasswordValid && (
           <Text style={styles.error}>
-            Password must be at least 8 characters long
+            Password must be at least 8 characters
           </Text>
         )}
 
-        {/* Re‑enter password */}
-        <Text style={styles.label}>Re‑enter new password</Text>
+        {/* Confirm Password */}
+        <Text style={styles.label}>Re-enter new password</Text>
         <TextInput
           style={[styles.input, focused === "confirm" && styles.inputFocused]}
           placeholder="••••••••"
@@ -169,9 +165,9 @@ const SignUpScreen: React.FC<SignUpProps> = ({ onClose }) => {
         <TouchableOpacity
           style={[
             styles.submit,
-            (!allRequiredFilled || loading) && styles.submitDisabled,
+            (!allFilled || loading) && styles.submitDisabled,
           ]}
-          disabled={!allRequiredFilled || loading}
+          disabled={!allFilled || loading}
           onPress={handleSignUp}
         >
           {loading ? (

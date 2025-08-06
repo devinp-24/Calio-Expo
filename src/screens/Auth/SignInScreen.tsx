@@ -1,5 +1,6 @@
 // src/screens/Auth/SignInScreen.tsx
-import React, { useState, useRef, useEffect } from "react";
+
+import React, { useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -11,8 +12,11 @@ import {
   Modal,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation, CommonActions } from "@react-navigation/native";
+
 import SignUpScreen from "./SignUpScreen";
 import LoginScreen from "./LoginScreen";
+import ConfirmSignUpScreen from "./ConfirmSignUpScreen";
 import AuthButton from "../../components/AuthButton";
 
 const googleLogo = require("../../assets/images/google.png");
@@ -23,24 +27,24 @@ const images = [
   require("../../assets/images/image2.png"),
   require("../../assets/images/image3.png"),
 ];
-const ch = Math.floor(Math.random() * images.length);
-const bgImage = images[ch];
+const bgImage = images[Math.floor(Math.random() * images.length)];
 
 const { height: windowHeight } = Dimensions.get("window");
 const IMAGE_HEIGHT = windowHeight * 0.45;
 
 const SignInScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
   const [showSignUp, setShowSignUp] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string>("");
 
   const handleGoogle = () => {
-    /* your Google auth logic */
+    // your Google auth logic
   };
   const handleApple = () => {
-    /* Apple auth logic */
+    // your Apple auth logic
   };
-  const handleSignUp = () => setShowSignUp(true);
-  const handleLogin = () => setShowLogin(true);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -78,7 +82,7 @@ const SignInScreen: React.FC = () => {
 
         <AuthButton
           label="Sign up"
-          onPress={handleSignUp}
+          onPress={() => setShowSignUp(true)}
           style={styles.signUpButton}
           textStyle={styles.signUpText}
         />
@@ -91,7 +95,7 @@ const SignInScreen: React.FC = () => {
         />
       </View>
 
-      {/* —— Slide‑up SignUp modal —— */}
+      {/* —— Slide-up SignUp modal —— */}
       <Modal
         visible={showSignUp}
         animationType="slide"
@@ -100,11 +104,18 @@ const SignInScreen: React.FC = () => {
       >
         <View style={modalStyles.backdrop} />
         <View style={modalStyles.sheet}>
-          <SignUpScreen onClose={() => setShowSignUp(false)} />
+          <SignUpScreen
+            onClose={() => setShowSignUp(false)}
+            onSuccess={(email: string) => {
+              setPendingEmail(email);
+              setShowSignUp(false);
+              setShowConfirm(true);
+            }}
+          />
         </View>
       </Modal>
 
-      {/* —— Slide‑up LogIn modal —— */}
+      {/* —— Slide-up LogIn modal —— */}
       <Modal
         visible={showLogin}
         animationType="slide"
@@ -114,6 +125,31 @@ const SignInScreen: React.FC = () => {
         <View style={modalStyles.backdrop} />
         <View style={modalStyles.sheet}>
           <LoginScreen onClose={() => setShowLogin(false)} />
+        </View>
+      </Modal>
+
+      {/* —— Confirm OTP Modal —— */}
+      <Modal
+        visible={showConfirm}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowConfirm(false)}
+      >
+        <View style={modalStyles.backdrop} />
+        <View style={modalStyles.sheet}>
+          <ConfirmSignUpScreen
+            email={pendingEmail}
+            onClose={() => setShowConfirm(false)}
+            onSuccess={() => {
+              setShowConfirm(false);
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: "ChatScreen" }],
+                })
+              );
+            }}
+          />
         </View>
       </Modal>
     </SafeAreaView>
@@ -137,7 +173,6 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   iconImage: { width: 18, height: 18 },
-  buttonText: { fontSize: 16, fontWeight: "600" },
 
   googleButton: { backgroundColor: "#FFF" },
   googleText: { color: "#000" },

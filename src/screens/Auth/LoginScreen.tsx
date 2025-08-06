@@ -18,6 +18,7 @@ import { useAuth } from "../../context/AuthContext"; // ← import useAuth
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import typography from "../../theme/typography";
+import { login } from "../../services/auth";
 
 // 1️⃣ Declare the onClose prop
 type LoginScreenProps = {
@@ -38,7 +39,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onClose }) => {
   const handleLogin = async () => {
     if (!canSubmit) return;
     try {
-      await signIn(identifier, identifier, password);
+      console.log("identifier:: " + identifier);
+      console.log("password:: " + password);
+
+      await login(identifier, password);
+
       // navigation to Home is handled by AuthContext
     } catch (err: any) {
       Alert.alert("Login failed", err.message || "An error occurred");
