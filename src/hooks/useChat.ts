@@ -39,7 +39,7 @@ type Memory = {
 };
 
 const { extra } = Constants.manifest2 ?? Constants.expoConfig ?? {};
-const API_BASE: string = extra?.API_BASE ?? "http://206.87.218.77:3001/api";
+const API_BASE: string = extra?.API_BASE ?? "http://192.168.3.190:3001/api";
 
 export function useChat() {
   const pageRef = useRef(0);

@@ -42,7 +42,7 @@ import Constants from "expo-constants";
 
 const { extra } = Constants.manifest2 ?? Constants.expoConfig ?? {};
 
-const BASE: string = extra?.API_BASE ?? "http://206.87.218.77:3001";
+const BASE: string = extra?.API_BASE ?? "http://192.168.3.190:3001";
 
 type Json = { message?: string; error?: string };
 
