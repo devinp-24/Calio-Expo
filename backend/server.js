@@ -11,6 +11,7 @@ process.on("unhandledRejection", (reason) =>
 
 const express = require("express");
 const cors = require("cors");
+const authRouter = require("./routes/auth");
 
 const { healthRouter } = require("./routes/health");
 const { userRouter } = require("./routes/user");
@@ -32,6 +33,7 @@ app.use("/api/health", healthRouter);
 app.use("/api/user", userRouter);
 app.use("/api", restaurantsRouter);
 app.use("/api", chatRouter);
+app.use("/api/auth", authRouter);
 
 // 404 handler
 app.use((req, res) => res.status(404).json({ error: "Not Found" }));

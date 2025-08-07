@@ -14,7 +14,7 @@ import { chatWithAgent } from "../api/openai";
 import * as Location from "expo-location";
 import { Platform } from "react-native";
 import { useAuth } from "../context/AuthContext";
-
+import uuid from "react-native-uuid";
 export type Button = {
   label: string;
   value?: string;
@@ -39,7 +39,7 @@ type Memory = {
 };
 
 const { extra } = Constants.manifest2 ?? Constants.expoConfig ?? {};
-const API_BASE: string = extra?.API_BASE ?? "http://192.168.0.103:3001/api";
+const API_BASE: string = extra?.API_BASE ?? "http://192.168.3.190:3001/api";
 
 export function useChat() {
   const pageRef = useRef(0);
@@ -75,12 +75,25 @@ export function useChat() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
   async function persistMemory(updates: Partial<Memory>) {
-    if (!userId) return;
-    await fetch(`${API_BASE}/user/${userId}`, {
+    console.log(
+      "[useChat] ▶ persistMemory called. userId=",
+      userId,
+      "updates=",
+      updates
+    );
+    if (!userId) {
+      console.warn("[useChat] ⚠️ persistMemory aborted: no userId");
+      return;
+    }
+    const res = await fetch(`${API_BASE}/user/${userId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...updates, timestamp: new Date().toISOString() }),
+      body: JSON.stringify({
+        ...updates,
+        timestamp: new Date().toISOString(),
+      }),
     });
+    console.log("[useChat] ◀ persistMemory response:", res.status);
   }
 
   const fullExtractorPrompt = `
@@ -112,7 +125,7 @@ Respond with only the JSON object—no extra text.
     (async () => {
       let id = await AsyncStorage.getItem("foodAgentUserId");
       if (!id) {
-        id = crypto.randomUUID();
+        id = uuid.v4().toString();
         await AsyncStorage.setItem("foodAgentUserId", id);
       }
       setUserId(id);
@@ -349,6 +362,8 @@ Respond with ONLY the JSON object—no extra text.
   }
 
   const sendMessage = async (text: string) => {
+    console.log("[useChat] ▶ sendMessage:", text);
+
     const trimmed = text.trim();
     if (!trimmed || loading) return;
     if (suggestions.length) setSuggestions([]);
