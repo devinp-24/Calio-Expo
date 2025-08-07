@@ -18,7 +18,7 @@ import typography from "../../theme/typography";
 
 type SignUpProps = {
   onClose: () => void;
-  onSuccess: (email: string) => void; // <-- added here
+  onSuccess: (email: string, password: string) => void; // <-- added here
 };
 
 const SignUpScreen: React.FC<SignUpProps> = ({ onClose, onSuccess }) => {
@@ -48,7 +48,7 @@ const SignUpScreen: React.FC<SignUpProps> = ({ onClose, onSuccess }) => {
       await signup(username, email, password);
 
       // 2) if successful, bubble up the email so the parent shows OTP:
-      onSuccess(email);
+      onSuccess(email, password);
     } catch (err: any) {
       Alert.alert("Sign up failed", err.message || "Please try again");
     } finally {

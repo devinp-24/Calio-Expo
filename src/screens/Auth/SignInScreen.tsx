@@ -38,6 +38,7 @@ const SignInScreen: React.FC = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string>("");
+  const [pendingPassword, setPendingPassword] = useState<string>("");
 
   const handleGoogle = () => {
     // your Google auth logic
@@ -106,8 +107,9 @@ const SignInScreen: React.FC = () => {
         <View style={modalStyles.sheet}>
           <SignUpScreen
             onClose={() => setShowSignUp(false)}
-            onSuccess={(email: string) => {
+            onSuccess={(email: string, password: string) => {
               setPendingEmail(email);
+              setPendingPassword(password);
               setShowSignUp(false);
               setShowConfirm(true);
             }}
@@ -139,15 +141,10 @@ const SignInScreen: React.FC = () => {
         <View style={modalStyles.sheet}>
           <ConfirmSignUpScreen
             email={pendingEmail}
+            password={pendingPassword}
             onClose={() => setShowConfirm(false)}
             onSuccess={() => {
               setShowConfirm(false);
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: "ChatScreen" }],
-                })
-              );
             }}
           />
         </View>

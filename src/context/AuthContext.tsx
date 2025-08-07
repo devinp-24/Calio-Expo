@@ -181,7 +181,7 @@ import { jwtDecode } from "jwt-decode";
 import Constants from "expo-constants";
 
 const { extra } = Constants.manifest2 ?? Constants.expoConfig ?? {};
-const API_BASE = extra?.API_BASE ?? "http://192.168.0.106:3001/api";
+const API_BASE = extra?.API_BASE ?? "http://206.87.218.77:3001/api";
 
 type TokenPayload = {
   exp: number;
@@ -237,6 +237,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   /** On mount: restore token from storage (if still valid) */
   useEffect(() => {
     (async () => {
+      if (__DEV__) {
+        console.log(" Clearning auth storage (dev) ");
+        await AsyncStorage.clear();
+      }
       try {
         const stored = await AsyncStorage.getItem("token");
         if (stored) {

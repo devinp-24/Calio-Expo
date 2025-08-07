@@ -12,21 +12,25 @@ import {
   Alert,
 } from "react-native";
 import { confirmSignup } from "../../services/auth";
+import { useAuth } from "../../context/AuthContext";
 import colors from "../../theme/colors";
 import spacing from "../../theme/spacing";
 import typography from "../../theme/typography";
 
 type ConfirmSignUpProps = {
   email: string; // email just registered
+  password: string;
   onClose: () => void; // cancel
   onSuccess: () => void; // OTP OK → go to chat
 };
 
 const ConfirmSignUpScreen: React.FC<ConfirmSignUpProps> = ({
   email,
+  password,
   onClose,
   onSuccess,
 }) => {
+  const { signIn: ctxSignIn } = useAuth();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -40,7 +44,7 @@ const ConfirmSignUpScreen: React.FC<ConfirmSignUpProps> = ({
     setLoading(true);
     try {
       await confirmSignup(email, code.trim());
-      // OTP is valid → fire onSuccess
+      await ctxSignIn(email, password);
       onSuccess();
     } catch (err: any) {
       Alert.alert(
