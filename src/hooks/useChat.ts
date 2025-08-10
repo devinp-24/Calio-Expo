@@ -39,7 +39,7 @@ type Memory = {
 };
 
 const { extra } = Constants.manifest2 ?? Constants.expoConfig ?? {};
-const API_BASE: string = extra?.API_BASE ?? "http://192.168.3.190:3001/api";
+const API_BASE: string = extra?.API_BASE ?? "http://192.168.1.156:3001/api";
 
 export function useChat() {
   const pageRef = useRef(0);
@@ -75,12 +75,6 @@ export function useChat() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
   async function persistMemory(updates: Partial<Memory>) {
-    console.log(
-      "[useChat] ▶ persistMemory called. userId=",
-      userId,
-      "updates=",
-      updates
-    );
     if (!userId) {
       console.warn("[useChat] ⚠️ persistMemory aborted: no userId");
       return;
@@ -93,7 +87,6 @@ export function useChat() {
         timestamp: new Date().toISOString(),
       }),
     });
-    console.log("[useChat] ◀ persistMemory response:", res.status);
   }
 
   const fullExtractorPrompt = `
@@ -500,44 +493,43 @@ Respond with ONLY the JSON object—no extra text.
           rating: r.rating,
           eta: r.eta,
         }));
-        setRestaurantOptions(mini);
-        await persistMemory({ restaurantOptions: mini });
+        // setRestaurantOptions(mini);
+        // await persistMemory({ restaurantOptions: mini });
         const cards = first3.map((r: any) => ({
           name: r.name,
           rating: r.rating,
           eta: r.eta,
-          description:
-            "This will be filled with a little description, need the api key", // you’ll fill this in from the AI text later
-          imageUrl: r.imageUrl,
+          description: "",
+          imageUrl: r.image_url,
         }));
         setRestaurantCards(cards);
-        await persistMemory({ restaurantOptions: mini });
+        // await persistMemory({ restaurantOptions: mini });
 
-        const textList = first3
-          .map(
-            (r: any) =>
-              `- ${r.name} (${r.rating}★, ${
-                curService === "delivery"
-                  ? `${r.eta} min delivery`
-                  : curService === "pickup"
-                  ? `${r.eta} min pickup`
-                  : `reserve: ${r.reservationLink || r.slug}`
-              })`
-          )
-          .join("\n");
-        const sumPrompt = restaurantSuggestionsPrompt
-          .replace("{cuisine}", curCuisine)
-          .replace("{serviceType}", curService);
+        // const textList = first3
+        //   .map(
+        //     (r: any) =>
+        //       `- ${r.name} (${r.rating}★, ${
+        //         curService === "delivery"
+        //           ? `${r.eta} min delivery`
+        //           : curService === "pickup"
+        //           ? `${r.eta} min pickup`
+        //           : `reserve: ${r.reservationLink || r.slug}`
+        //       })`
+        //   )
+        //   .join("\n");
+        // const sumPrompt = restaurantSuggestionsPrompt
+        //   .replace("{cuisine}", curCuisine)
+        //   .replace("{serviceType}", curService);
 
-        const sugRaw = await chatWithAgent(
-          [{ role: "user", content: textList }],
-          sumPrompt
-        );
-        const sugMsg: Message = {
-          role: sugRaw.role as any,
-          content: sugRaw.content ?? "",
-        };
-        setMessages((ms) => [...ms, sugMsg]);
+        // const sugRaw = await chatWithAgent(
+        //   [{ role: "user", content: textList }],
+        //   sumPrompt
+        // );
+        // const sugMsg: Message = {
+        //   role: sugRaw.role as any,
+        //   content: sugRaw.content ?? "",
+        // };
+        // setMessages((ms) => [...ms, sugMsg]);
       } catch (e) {
         console.error("Restaurant lookup failed:", e);
       }
@@ -579,33 +571,43 @@ Respond with ONLY the JSON object—no extra text.
             rating: r.rating,
             eta: r.eta,
           }));
-          setRestaurantOptions(mini);
-          await persistMemory({ restaurantOptions: mini });
+          // setRestaurantOptions(mini);
+          // await persistMemory({ restaurantOptions: mini });
 
-          const textList2 = next3
-            .map(
-              (r: any) =>
-                `- ${r.name} (${r.rating}★, ${
-                  curService === "delivery"
-                    ? `${r.eta} min delivery`
-                    : curService === "pickup"
-                    ? `${r.eta} min pickup`
-                    : `reserve: ${r.reservationLink || r.slug}`
-                })`
-            )
-            .join("\n");
-          const sumPrompt2 = restaurantSuggestionsPrompt
-            .replace("{cuisine}", curCuisine!)
-            .replace("{serviceType}", curService!);
-          const moreRaw = await chatWithAgent(
-            [{ role: "user", content: textList2 }],
-            sumPrompt2
-          );
-          const moreMsg: Message = {
-            role: moreRaw.role as any,
-            content: moreRaw.content ?? "",
-          };
-          setMessages((ms) => [...ms, moreMsg]);
+          const cards = next3.map((r: any) => ({
+            name: r.name,
+            rating: r.rating,
+            eta: r.eta,
+            description: "",
+            imageUrl: r.image_url,
+          }));
+          setRestaurantCards(cards);
+          // await persistMemory({ restaurantOptions: mini });
+
+          // const textList2 = next3
+          //   .map(
+          //     (r: any) =>
+          //       `- ${r.name} (${r.rating}★, ${
+          //         curService === "delivery"
+          //           ? `${r.eta} min delivery`
+          //           : curService === "pickup"
+          //           ? `${r.eta} min pickup`
+          //           : `reserve: ${r.reservationLink || r.slug}`
+          //       })`
+          //   )
+          //   .join("\n");
+          // const sumPrompt2 = restaurantSuggestionsPrompt
+          //   .replace("{cuisine}", curCuisine!)
+          //   .replace("{serviceType}", curService!);
+          // const moreRaw = await chatWithAgent(
+          //   [{ role: "user", content: textList2 }],
+          //   sumPrompt2
+          // );
+          // const moreMsg: Message = {
+          //   role: moreRaw.role as any,
+          //   content: moreRaw.content ?? "",
+          // };
+          // setMessages((ms) => [...ms, moreMsg]);
           return;
         case "pick":
           let idx: number;

@@ -11,9 +11,8 @@ import {
 
 type Props = {
   name: string;
-  rating: number;
+  rating?: number;
   eta: number;
-  description: string;
   imageUrl?: string;
   onOrderPress?: (e: GestureResponderEvent) => void;
 };
@@ -22,42 +21,41 @@ const RestaurantCard: React.FC<Props> = ({
   name,
   rating,
   eta,
-  description,
   imageUrl,
   onOrderPress,
-}) => (
-  <View style={styles.card}>
-    <Image
-      source={
-        imageUrl ? { uri: imageUrl } : require("../../assets/placeholder.png")
-      }
-      style={styles.thumbnail}
-      resizeMode="cover"
-    />
+}) => {
+  const safeDisplay = typeof rating === "string" ? rating : "–";
 
-    <View style={styles.content}>
-      <Text style={styles.name}>{name}</Text>
+  return (
+    <View style={styles.card}>
+      <Image
+        source={
+          imageUrl ? { uri: imageUrl } : require("../../assets/placeholder.png")
+        }
+        style={styles.thumbnail}
+        resizeMode="cover"
+      />
 
-      <View style={styles.metaRow}>
-        <Text style={styles.star}>⭐</Text>
-        <Text style={styles.rating}>{rating.toFixed(1)}</Text>
-        <Text style={styles.eta}>• {eta} min</Text>
+      <View style={styles.content}>
+        <Text style={styles.name}>{name}</Text>
+
+        <View style={styles.metaRow}>
+          <Text style={styles.star}>⭐</Text>
+          <Text style={styles.rating}>{safeDisplay}</Text>
+          <Text style={styles.eta}>• {eta} min</Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.button}
+          activeOpacity={0.8}
+          onPress={onOrderPress}
+        >
+          <Text style={styles.buttonText}>Order Now</Text>
+        </TouchableOpacity>
       </View>
-
-      <Text style={styles.description} numberOfLines={3}>
-        {description}
-      </Text>
-
-      <TouchableOpacity
-        style={styles.button}
-        activeOpacity={0.8}
-        onPress={onOrderPress}
-      >
-        <Text style={styles.buttonText}>Order Now</Text>
-      </TouchableOpacity>
     </View>
-  </View>
-);
+  );
+};
 
 export default RestaurantCard;
 
@@ -76,10 +74,14 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     // Android elevation
     elevation: 3,
+
+    // allow height to grow with content
+    alignItems: "stretch",
   },
   thumbnail: {
     width: 100,
-    height: 100,
+    // stretch to match the content container height
+    height: "100%",
     backgroundColor: "#eee",
   },
   content: {
@@ -91,12 +93,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#111",
-    marginBottom: 4,
+    // allow wrapping
+    flexShrink: 1,
   },
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 6,
+    marginVertical: 6,
   },
   star: {
     fontSize: 14,
@@ -110,12 +113,6 @@ const styles = StyleSheet.create({
   eta: {
     fontSize: 14,
     color: "#444",
-  },
-  description: {
-    fontSize: 14,
-    color: "#666",
-    lineHeight: 18,
-    marginBottom: 8,
   },
   button: {
     backgroundColor: "#ff5a1f",
