@@ -27,5 +27,234 @@
         "eta": 15
       }
     ]
+  },
+  "b1ba9be3-53c1-4f05-bd41-148f442c420a": {
+    "lastOrder": "I choose the second one",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-07T09:33:26.226Z",
+    "restaurantOptions": [
+      {
+        "name": "Za Za Slice",
+        "rating": "4.6"
+      },
+      {
+        "name": "Il Forno, Al Ghurair Centre",
+        "rating": "4.7"
+      },
+      {
+        "name": "Lazio'z Pizza - Pizza Restaurant in Al Karama",
+        "rating": "4.9"
+      }
+    ]
+  },
+  "1d542dc1-1f89-4b1b-9aeb-4e20f53071e1": {
+    "lastOrder": "Delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-07T14:51:37.719Z",
+    "restaurantOptions": [
+      {
+        "name": "Tortilla - تورتيا - DFC",
+        "rating": "4.8"
+      },
+      {
+        "name": "Taco Rico Dubai",
+        "rating": "4.8"
+      },
+      {
+        "name": "TRD Tacos | Dubai",
+        "rating": "4.6"
+      }
+    ]
+  },
+  "bd79a10b-90c7-4562-94d5-318816b01d09": {
+    "lastOrder": "Delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-07T14:57:34.046Z",
+    "restaurantOptions": [
+      {
+        "name": "GIA",
+        "rating": "4.8"
+      },
+      {
+        "name": "Eataly",
+        "rating": "4.6"
+      },
+      {
+        "name": "Carluccio's - Italian Restaurant in Dubai Mall",
+        "rating": "4.7"
+      }
+    ],
+    "selectedRestaurant": "TRD Tacos | Dubai"
+  },
+  "2db99453-7166-4840-9b59-1d2cc099002b": {
+    "lastOrder": "Delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-07T15:31:05.144Z",
+    "restaurantOptions": [
+      {
+        "name": "Naughty Pizza Dubai",
+        "rating": "4.8"
+      },
+      {
+        "name": "PizzaExpress",
+        "rating": "4.7"
+      },
+      {
+        "name": "Pizza Bay",
+        "rating": "4.8"
+      }
+    ],
+    "selectedRestaurant": "Hutong Dubai"
+  },
+  "cfcca852-a7a1-4489-9e06-71d9fa872c8d": {
+    "lastOrder": "Delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-07T15:42:28.393Z",
+    "restaurantOptions": [
+      {
+        "name": "Bombay Borough",
+        "rating": "4.8"
+      },
+      {
+        "name": "Amritsr Restaurant Al Nahda - Indian Restaurant in Dubai",
+        "rating": "4.6"
+      },
+      {
+        "name": "Mehman, Dubai",
+        "rating": "4.8"
+      }
+    ],
+    "selectedRestaurant": "Mehman, Dubai"
+  },
+  "b5ddf85f-b185-4548-b403-d45c09c70ea2": {
+    "lastOrder": "Delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-07T15:44:47.073Z",
+    "restaurantOptions": [
+      {
+        "name": "Ying Ji Dim Sum（Move to Next door Yun Xi Lou)",
+        "rating": "4.7"
+      },
+      {
+        "name": "New Shanghai",
+        "rating": "4.6"
+      },
+      {
+        "name": "Royal China Restaurant",
+        "rating": "4.4"
+      }
+    ]
+  },
+  "0b017bfb-25ce-4547-b10c-149ea52f7fd1": {
+    "lastOrder": "Delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-07T16:57:56.761Z",
+    "restaurantOptions": [
+      {
+        "name": "Tonos Restaurant",
+        "rating": "4.8"
+      },
+      {
+        "name": "Mythos Urban Greek Eatery",
+        "rating": "4.5"
+      },
+      {
+        "name": "THE DISH BY CHEF SPERXOS",
+        "rating": "4.9"
+      }
+    ],
+    "selectedRestaurant": "Mythos Urban Greek Eatery"
+  },
+  "5a694502-7840-4153-a9e7-1a77d1e27d63": {
+    "lastOrder": "Delivery pls",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-10T11:52:04.408Z",
+    "restaurantOptions": [
+      {
+        "name": "Naughty Pizza Dubai",
+        "rating": "4.8"
+      },
+      {
+        "name": "Pizza Bay",
+        "rating": "4.8"
+      },
+      {
+        "name": "Moon Slice Pizza Dubai",
+        "rating": "4.7"
+      }
+    ],
+    "selectedRestaurant": "Moon Slice Pizza Dubai"
+  },
+  "a1e8aa65-08a2-4062-9a98-98263f98cf70": {
+    "lastOrder": "Delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-10T12:33:10.322Z",
+    "restaurantOptions": [
+      {
+        "name": "AVE Dubai",
+        "rating": "4.8"
+      },
+      {
+        "name": "One Life Kitchen and Café (d3)",
+        "rating": "4.5"
+      },
+      {
+        "name": "LDC Kitchen+Coffee - SZR",
+        "rating": "4.5"
+      }
+    ],
+    "selectedRestaurant": "LDC Kitchen+Coffee - SZR"
+  },
+  "651ac0e4-f82a-4151-91cd-c91b343138b8": {
+    "lastOrder": "Delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-10T12:35:56.678Z"
+  },
+  "6856bbc3-6ef3-4cb7-916c-06f834cfac41": {
+    "lastOrder": "?",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-10T12:44:22.221Z"
+  },
+  "6691a5ab-05a1-4076-9435-e6e54ce1ebee": {
+    "lastOrder": "An you show more options",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-10T13:06:18.475Z",
+    "selectedRestaurant": "GIA"
   }
 }

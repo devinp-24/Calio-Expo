@@ -8,7 +8,18 @@ const OpenAI = require("openai");
 const PLACES_URL =
   "https://maps.googleapis.com/maps/api/place/nearbysearch/json";
 
-/** Fetch full details for a place_id (minus photos) */
+// --- helper to build the photo URL ---
+const PHOTO_BASE = "https://maps.googleapis.com/maps/api/place/photo";
+function makePhotoUrl(photoReference, maxWidth = 400) {
+  const params = new URLSearchParams({
+    key: KEY,
+    photoreference: photoReference,
+    maxwidth: maxWidth.toString(),
+  });
+  return `${PHOTO_BASE}?${params}`;
+}
+
+// /** Fetch full details for a place_id (now including photos) */
 async function fetchDetails(place_id) {
   const resp = await axios.get(
     "https://maps.googleapis.com/maps/api/place/details/json",
@@ -30,6 +41,7 @@ async function fetchDetails(place_id) {
           "business_status",
           "permanently_closed",
           "vicinity",
+          "photos", // ← added
         ].join(","),
       },
     }
@@ -41,35 +53,43 @@ async function enrichPlaces(basics) {
   const details = await Promise.all(
     basics.map((b) => fetchDetails(b.place_id))
   );
-  return details.map((d) => ({
-    place_id: d.place_id,
-    name: d.name,
-    address: d.formatted_address || d.vicinity,
-    location: d.geometry?.location,
-    phone: d.formatted_phone_number || null,
-    website: d.website || null,
-    price_level: d.price_level ?? null,
-    rating: d.rating?.toFixed(1) || null,
-    user_ratings_total: d.user_ratings_total ?? null,
-    business_status: d.business_status || null,
-    permanently_closed: d.permanently_closed || false,
-    opening_hours: d.opening_hours?.weekday_text || [],
-  }));
+  return details.map((d) => {
+    // build image_url from the first photo, if available
+    const firstPhoto = d.photos?.[0];
+    const image_url = firstPhoto
+      ? makePhotoUrl(firstPhoto.photo_reference, 800)
+      : null;
+
+    return {
+      place_id: d.place_id,
+      name: d.name,
+      address: d.formatted_address || d.vicinity,
+      location: d.geometry?.location,
+      phone: d.formatted_phone_number || null,
+      website: d.website || null,
+      price_level: d.price_level ?? null,
+      rating: d.rating?.toFixed(1) || null,
+      user_ratings_total: d.user_ratings_total ?? null,
+      business_status: d.business_status || null,
+      permanently_closed: d.permanently_closed || false,
+      opening_hours: d.opening_hours?.weekday_text || [],
+      // ← newly added
+      image_url,
+    };
+  });
 }
 
 exports.findByCuisine = async (lat, lon, cuisine) => {
-  let resp = await axios.get(
-    "https://maps.googleapis.com/maps/api/place/nearbysearch/json",
-    {
-      params: {
-        key: KEY,
-        location: `${lat},${lon}`,
-        radius: 10000,
-        type: "restaurant",
-        keyword: `${cuisine} restaurant`,
-      },
-    }
-  );
+  let resp = await axios.get(PLACES_URL, {
+    params: {
+      key: KEY,
+      location: `${lat},${lon}`,
+      radius: 10000,
+      type: "restaurant",
+      keyword: `${cuisine} restaurant`,
+    },
+  });
+
   if (!resp.data.results.length) {
     resp = await axios.get(
       "https://maps.googleapis.com/maps/api/place/textsearch/json",
@@ -83,5 +103,6 @@ exports.findByCuisine = async (lat, lon, cuisine) => {
       }
     );
   }
+
   return enrichPlaces(resp.data.results.slice(0, 30));
 };
