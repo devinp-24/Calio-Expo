@@ -13,7 +13,19 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "ubereats",
+          "doordash",
+          "boons",
+          "skipthedishes",
+          "foodpanda",
+          "zomato",
+          "swiggy"
+        ]
+      },
+      "bundleIdentifier": "Y"
     },
     "android": {
       "adaptiveIcon": {
@@ -26,7 +38,10 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "OPENAI_API_KEY": ""
+      "OPENAI_API_KEY": "",
+      "eas": {
+        "projectId": "6699565e-0651-48ce-a4b2-b6ced02d79c9"
+      }
     }
   }
 }

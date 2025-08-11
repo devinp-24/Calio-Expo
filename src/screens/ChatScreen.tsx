@@ -11,6 +11,7 @@ import {
   Dimensions,
   Platform,
   FlatList,
+  Linking,
   KeyboardAvoidingView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,6 +20,7 @@ import * as Haptics from "expo-haptics";
 import { useChat, Message } from "../hooks/useChat";
 import ChatBubble from "../components/ChatBubble";
 import RestaurantCard from "../components/RestaurantCard";
+
 
 const logo = require("../assets/images/calio-orange-logo.png");
 const { width } = Dimensions.get("window");
@@ -87,6 +89,17 @@ export default function ChatScreen() {
     // Give the UI a beat, then scroll to the bottom
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   }, [restaurantCards]); // ← only react to card changes
+
+  useEffect(() => {
+  (async () => {
+    try {
+      const ok = await Linking.canOpenURL('ubereats://');
+      console.log('Uber Eats installed?', ok);
+    } catch (e) {
+      console.warn('canOpenURL error', e);
+    }
+  })();
+}, []);
 
   // Type-out the intro on first load
   useEffect(() => {
@@ -199,6 +212,7 @@ export default function ChatScreen() {
                       <ChatBubble
                         content={item.message.content}
                         role={item.message.role}
+                        buttons={item.message.buttons}
                       />
                     );
                   }

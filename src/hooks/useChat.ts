@@ -14,12 +14,16 @@ import { chatWithAgent } from "../api/openai";
 import * as Location from "expo-location";
 import { Platform } from "react-native";
 import { useAuth } from "../context/AuthContext";
+import type { AppTarget } from "../hooks/useSmartLink";
 import uuid from "react-native-uuid";
+
+
 export type Button = {
   label: string;
   value?: string;
   style?: string;
   url?: string;
+  appTargets? : AppTarget[];
 };
 
 export type Message = {
@@ -39,7 +43,7 @@ type Memory = {
 };
 
 const { extra } = Constants.manifest2 ?? Constants.expoConfig ?? {};
-const API_BASE: string = extra?.API_BASE ?? "http://192.168.1.156:3001/api";
+const API_BASE: string = extra?.API_BASE ?? "http://192.168.3.190:3001/api";
 
 export function useChat() {
   const pageRef = useRef(0);
@@ -212,28 +216,60 @@ Respond with only the JSON object—no extra text.
     setLoading(false);
   }
 
+  // async function selectRestaurant(idx: number) {
+  //   const picked = fullOptionsRef.current[idx];
+  //   setSelectedRestaurant(picked.name);
+  //   await persistMemory({ selectedRestaurant: picked.name });
+  //   const linkMsg: Message = {
+  //     role: "assistant",
+  //     content: `Great choice—**${picked.name}** it is! 😊`,
+  //     buttons: [
+  //       {
+  //         label: "Order on Uber Eats",
+  //         url: `https://www.ubereats.com/ca/feed?diningMode=DELIVERY`,
+  //         style: "primary",
+  //       },
+  //       {
+  //         label: "Order with Boons",
+  //         url: "https://www.boons.io/order",
+  //         style: "primary",
+  //       },
+  //     ],
+  //   };
+  //   setMessages((ms) => [...ms, linkMsg]);
+  // }
+
   async function selectRestaurant(idx: number) {
-    const picked = fullOptionsRef.current[idx];
-    setSelectedRestaurant(picked.name);
-    await persistMemory({ selectedRestaurant: picked.name });
-    const linkMsg: Message = {
-      role: "assistant",
-      content: `Great choice—**${picked.name}** it is! 😊`,
-      buttons: [
-        {
-          label: "Order on Uber Eats",
-          url: `https://www.ubereats.com/ca/feed?diningMode=DELIVERY`,
-          style: "primary",
-        },
-        {
-          label: "Order with Boons",
-          url: "https://www.boons.io/order",
-          style: "primary",
-        },
-      ],
-    };
-    setMessages((ms) => [...ms, linkMsg]);
-  }
+  const picked = fullOptionsRef.current[idx];
+  setSelectedRestaurant(picked.name);
+  await persistMemory({ selectedRestaurant: picked.name });
+
+  const uberTargets = [{
+  scheme: "ubereats",
+  // path: `store/${picked.slug}`, // if you have a slug/ID, add it
+  iosStoreUrl: "https://apps.apple.com/app/id1058959277",
+  androidStoreUrl: "https://play.google.com/store/apps/details?id=com.ubercab.eats",
+  webFallback: "https://www.ubereats.com/",
+}];
+
+const doordashTargets = [{
+  scheme: "doordash",
+  // path: `merchant/${picked.slug}`,
+  iosStoreUrl: "https://apps.apple.com/app/id719972451",
+  androidStoreUrl: "https://play.google.com/store/apps/details?id=com.dd.doordash",
+  webFallback: "https://www.doordash.com/",
+}];
+
+const linkMsg: Message = {
+  role: "assistant",
+  content: `Great choice with **${picked.name}**! How would you like to order?`,
+  buttons: [
+    { label: "Order with Uber Eats", style: "brand-ubereats", appTargets: uberTargets },
+    { label: "Order with DoorDash",  style: "brand-doordash", appTargets: doordashTargets },
+  ],
+};
+setMessages((ms) => [...ms, linkMsg]);
+}
 
   async function classifyAffirmation(text: string, last: string) {
     const res = await extractor.chat.completions.create({

@@ -27,5 +27,39 @@
         "eta": 15
       }
     ]
+  },
+  "a1b40e3f-6e6c-4a78-93d7-cf0cfedeb962": {
+    "lastOrder": "show me more options",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-10T21:47:58.150Z",
+    "selectedRestaurant": "Casa Mia Cucina and Mercato"
+  },
+  "8c01f343-1436-4dd9-9725-159be07ba1da": {
+    "lastOrder": "the basic good just show me restaurants",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-10T22:04:23.035Z"
+  },
+  "a811fbad-0780-4cc6-85a1-58fa99f11e4f": {
+    "lastOrder": "show more",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-10T22:07:11.318Z"
+  },
+  "3f5c4b5e-899f-4707-abde-aef35d203617": {
+    "lastOrder": "delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-11T07:41:09.418Z",
+    "selectedRestaurant": "El Rincón Mexicano"
   }
 }
