@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   GestureResponderEvent,
+  Platform,
 } from "react-native";
 
 type Props = {
@@ -27,31 +28,37 @@ const RestaurantCard: React.FC<Props> = ({
   const safeDisplay = typeof rating === "string" ? rating : "–";
 
   return (
-    <View style={styles.card}>
-      <Image
-        source={
-          imageUrl ? { uri: imageUrl } : require("../../assets/placeholder.png")
-        }
-        style={styles.thumbnail}
-        resizeMode="cover"
-      />
+    <View style={styles.shadowWrap}>
+      <View style={styles.card}>
+        <Image
+          source={
+            imageUrl
+              ? { uri: imageUrl }
+              : require("../../assets/placeholder.png")
+          }
+          style={styles.thumbnail}
+          resizeMode="cover"
+        />
 
-      <View style={styles.content}>
-        <Text style={styles.name}>{name}</Text>
+        <View style={styles.content}>
+          <Text style={styles.name} numberOfLines={3}>
+            {name}
+          </Text>
 
-        <View style={styles.metaRow}>
-          <Text style={styles.star}>⭐</Text>
-          <Text style={styles.rating}>{safeDisplay}</Text>
-          <Text style={styles.eta}>• {eta} min</Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.star}>⭐</Text>
+            <Text style={styles.rating}>{safeDisplay}</Text>
+            <Text style={styles.eta}>• {eta} min</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.button}
+            activeOpacity={0.8}
+            onPress={onOrderPress}
+          >
+            <Text style={styles.buttonText}>Order Now</Text>
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={styles.button}
-          activeOpacity={0.8}
-          onPress={onOrderPress}
-        >
-          <Text style={styles.buttonText}>Order Now</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -60,23 +67,29 @@ const RestaurantCard: React.FC<Props> = ({
 export default RestaurantCard;
 
 const styles = StyleSheet.create({
+  shadowWrap: {
+    marginHorizontal: 10,
+    marginVertical: 8,
+    borderRadius: 12,
+    backgroundColor: "transparent",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 2 },
+      },
+      android: { elevation: 4 },
+    }),
+  },
   card: {
     flexDirection: "row",
     backgroundColor: "#fff",
     borderRadius: 12,
-    overflow: "hidden",
-    marginHorizontal: 16,
     marginVertical: 8,
-    // iOS shadow
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    // Android elevation
-    elevation: 3,
-
-    // allow height to grow with content
-    alignItems: "stretch",
+    overflow: "hidden",
+    width: 270,
+    height: 160,
   },
   thumbnail: {
     width: 100,
@@ -93,6 +106,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#111",
+    marginBottom: 15,
     // allow wrapping
     flexShrink: 1,
   },
@@ -115,10 +129,22 @@ const styles = StyleSheet.create({
     color: "#444",
   },
   button: {
+    width: 150,
     backgroundColor: "#ff5a1f",
     borderRadius: 8,
     paddingVertical: 8,
     alignItems: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 3 },
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   buttonText: {
     color: "#fff",

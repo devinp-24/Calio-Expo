@@ -12,6 +12,7 @@ import {
   Platform,
   FlatList,
   KeyboardAvoidingView,
+  ScrollView, // ← re-added for quick pills
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -21,11 +22,21 @@ import ChatBubble from "../components/ChatBubble";
 import RestaurantCard from "../components/RestaurantCard";
 
 const logo = require("../assets/images/calio-orange-logo.png");
+
 const { width } = Dimensions.get("window");
 const LOGO_HEIGHT = 60;
 const INPUT_BOTTOM = Platform.OS === "ios" ? 20 : 20;
 const INPUT_WIDTH = width - 32;
 const INPUT_BAR_HEIGHT = Platform.OS === "ios" ? 56 : 48;
+const QUICK_GAP = 8; // ← spacing above input for quick pills
+
+// Quick-access mock texts (same as original)
+const mockQuickTexts = [
+  "What's for dinner?",
+  "Lunch ideas?",
+  "Local delivery finds",
+  "Dinner for two?",
+];
 
 type Card = {
   name: string;
@@ -48,18 +59,16 @@ export default function ChatScreen() {
 
   const flatListRef = useRef<FlatList<ChatItem>>(null);
 
-  /** Keep a history of card groups, each locked to its insertion point (afterIndex) */
+  /** Maintain blocks of restaurant cards, each anchored after the message present at creation time */
   const [cardBlocks, setCardBlocks] = useState<
     Array<{ key: string; afterIndex: number; cards: Card[] }>
   >([]);
   const lastSignature = useRef<string | null>(null);
 
-  // Whenever restaurantCards changes, append a brand new card block after
-  // the most recent AI message. Old blocks remain in place.
+  // Append a new card block when restaurantCards changes (avoid duplicate inserts)
   useEffect(() => {
     if (!restaurantCards || restaurantCards.length === 0) return;
 
-    // Minimal signature to avoid duplicate inserts on re-renders
     const sig = JSON.stringify(
       restaurantCards.map((c) => ({
         n: c.name,
@@ -68,13 +77,10 @@ export default function ChatScreen() {
         u: c.imageUrl ?? null,
       }))
     );
-
     if (sig === lastSignature.current) return;
     lastSignature.current = sig;
 
-    // Insert AFTER the latest AI message at the moment of creation
-    const afterIndex = messages.length - 1;
-
+    const afterIndex = messages.length - 1; // anchor after the latest AI message now
     setCardBlocks((prev) => [
       ...prev,
       {
@@ -84,11 +90,10 @@ export default function ChatScreen() {
       },
     ]);
 
-    // Give the UI a beat, then scroll to the bottom
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
-  }, [restaurantCards]); // ← only react to card changes
+  }, [restaurantCards, messages.length]);
 
-  // Type-out the intro on first load
+  // Type-out intro from the first AI message
   useEffect(() => {
     if (!hasStarted && messages.length > 0) {
       const full = messages[0].content;
@@ -115,7 +120,7 @@ export default function ChatScreen() {
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
-  // Build a quick lookup so we can inject card blocks after their target message indexes
+  // Map: messageIndex -> list of blocks to insert after it
   const blocksByAfterIndex = useMemo(() => {
     const map = new Map<number, Array<{ key: string; cards: Card[] }>>();
     for (const b of cardBlocks) {
@@ -125,7 +130,7 @@ export default function ChatScreen() {
     return map;
   }, [cardBlocks]);
 
-  // Merge messages + any card blocks that belong after each message
+  // Merge messages with their card blocks
   const chatData: ChatItem[] = useMemo(() => {
     const items: ChatItem[] = [];
     messages.forEach((m, i) => {
@@ -140,7 +145,7 @@ export default function ChatScreen() {
     return items;
   }, [messages, blocksByAfterIndex]);
 
-  // Determine the key of the most recent (latest) card block for enabling selection
+  // Only the most recent card block should be interactive
   const latestBlockKey = cardBlocks.length
     ? cardBlocks[cardBlocks.length - 1].key
     : null;
@@ -167,18 +172,44 @@ export default function ChatScreen() {
           <Image source={logo} style={styles.logo} />
         </View>
 
-        {/* Chat area */}
+        {/* Content area */}
         <View style={[styles.textArea, hasStarted && styles.textAreaChat]}>
           {!hasStarted ? (
-            <Text
-              style={[
-                styles.introText,
-                { marginBottom: INPUT_BAR_HEIGHT + 16 },
-              ]}
-            >
-              {displayedText}
-            </Text>
+            <>
+              {/* Intro text */}
+              <Text
+                style={[
+                  styles.introText,
+                  { marginBottom: INPUT_BAR_HEIGHT + QUICK_GAP },
+                ]}
+              >
+                {displayedText}
+              </Text>
+
+              {/* Quick-access pills (re-added) */}
+              <View
+                style={[
+                  styles.quickScrollWrapper,
+                  {
+                    bottom: INPUT_BOTTOM + INPUT_BAR_HEIGHT + QUICK_GAP,
+                  },
+                ]}
+              >
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.quickContainer}
+                >
+                  {mockQuickTexts.map((text, i) => (
+                    <View key={i} style={styles.quickItemWrapper}>
+                      <Text style={styles.quickText}>{text}</Text>
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
+            </>
           ) : (
+            // Chat history + injected restaurant card blocks
             <View
               style={[
                 styles.chatContainer,
@@ -202,11 +233,7 @@ export default function ChatScreen() {
                       />
                     );
                   }
-
-                  // Render card block; only the latest block is interactive to avoid
-                  // selecting from stale groups
                   const isLatest = item.key === latestBlockKey;
-
                   return (
                     <View style={styles.cardBlock}>
                       <FlatList
@@ -269,12 +296,14 @@ export default function ChatScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF" },
+
   topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingTop: 12,
   },
+
   logoArea: {
     position: "absolute",
     width,
@@ -304,6 +333,27 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
 
+  // Quick pills (same look as before)
+  quickScrollWrapper: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: INPUT_BAR_HEIGHT + QUICK_GAP + INPUT_BOTTOM,
+    height: 48,
+    alignItems: "center",
+  },
+  quickContainer: { paddingHorizontal: 16, alignItems: "center" },
+  quickItemWrapper: {
+    borderWidth: 1,
+    borderColor: "#DDD",
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginRight: 12,
+    backgroundColor: "#FFF",
+  },
+  quickText: { fontSize: 14, color: "#333" },
+
   chatContainer: {
     flex: 1,
     paddingTop: 3,
@@ -312,9 +362,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
 
-  // fixes card height so they never overflow
+  // Card block row under a message
   cardBlock: {
-    height: 140,
+    height: 180,
     marginVertical: 8,
   },
 
