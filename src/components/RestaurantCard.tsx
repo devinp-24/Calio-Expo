@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     overflow: "hidden",
     width: 270,
-    height: 160,
+    height: 150,
   },
   thumbnail: {
     width: 100,
@@ -106,7 +106,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#111",
-    marginBottom: 15,
     // allow wrapping
     flexShrink: 1,
   },

@@ -20,6 +20,8 @@ import * as Haptics from "expo-haptics";
 import { useChat, Message } from "../hooks/useChat";
 import ChatBubble from "../components/ChatBubble";
 import RestaurantCard from "../components/RestaurantCard";
+import QuickPills from "../components/QuickPills";
+import type { QuickPillsRef } from "../components/QuickPills";
 
 const logo = require("../assets/images/calio-orange-logo.png");
 
@@ -64,6 +66,16 @@ export default function ChatScreen() {
     Array<{ key: string; afterIndex: number; cards: Card[] }>
   >([]);
   const lastSignature = useRef<string | null>(null);
+
+  const sendNow = (text: string) => {
+    const t = text.trim();
+    if (!t || loading) return;
+    if (!hasStarted) setHasStarted(true);
+    setDraft(t); // show it in the input
+    sendMessage(t); // send immediately
+    setDraft(""); // clear input after sending
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 120);
+  };
 
   // Append a new card block when restaurantCards changes (avoid duplicate inserts)
   useEffect(() => {
@@ -187,26 +199,15 @@ export default function ChatScreen() {
               </Text>
 
               {/* Quick-access pills (re-added) */}
-              <View
-                style={[
-                  styles.quickScrollWrapper,
-                  {
-                    bottom: INPUT_BOTTOM + INPUT_BAR_HEIGHT + QUICK_GAP,
-                  },
-                ]}
-              >
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.quickContainer}
-                >
-                  {mockQuickTexts.map((text, i) => (
-                    <View key={i} style={styles.quickItemWrapper}>
-                      <Text style={styles.quickText}>{text}</Text>
-                    </View>
-                  ))}
-                </ScrollView>
-              </View>
+              <QuickPills
+                items={mockQuickTexts} // today: static list
+                bottomOffset={INPUT_BOTTOM + INPUT_BAR_HEIGHT + QUICK_GAP}
+                onPress={(txt) => {
+                  sendNow(txt);
+                  // optional: auto-send
+                  // setHasStarted(true); sendMessage(txt);
+                }}
+              />
             </>
           ) : (
             // Chat history + injected restaurant card blocks
