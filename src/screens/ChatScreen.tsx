@@ -1,5 +1,5 @@
 // src/screens/ChatScreen.tsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   SafeAreaView,
   View,
@@ -10,55 +10,89 @@ import {
   TouchableOpacity,
   Dimensions,
   Platform,
-  ScrollView,
   FlatList,
   KeyboardAvoidingView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 
-// Pull in your chat hook and bubble component
 import { useChat, Message } from "../hooks/useChat";
 import ChatBubble from "../components/ChatBubble";
+import RestaurantCard from "../components/RestaurantCard";
 
-// Your logo asset
 const logo = require("../assets/images/calio-orange-logo.png");
-
-const mockQuickTexts = [
-  "What's for dinner?",
-  "Lunch ideas?",
-  "Local delivery finds",
-  "Dinner for two?",
-];
-
 const { width } = Dimensions.get("window");
 const LOGO_HEIGHT = 60;
 const INPUT_BOTTOM = Platform.OS === "ios" ? 20 : 20;
 const INPUT_WIDTH = width - 32;
 const INPUT_BAR_HEIGHT = Platform.OS === "ios" ? 56 : 48;
-const QUICK_GAP = 8;
 
-// Full text to type out
-const FULL_INTRO = "Hi Rishav!\nWhat are you in the mood for today?";
+type Card = {
+  name: string;
+  rating?: number;
+  eta: number;
+  imageUrl?: string;
+};
+
+type ChatItem =
+  | { type: "message"; key: string; message: Message }
+  | { type: "cards"; key: string; cards: Card[] };
 
 export default function ChatScreen() {
-  const { messages, loading, sendMessage } = useChat();
+  const { messages, loading, sendMessage, restaurantCards, selectRestaurant } =
+    useChat();
+
   const [draft, setDraft] = useState("");
   const [hasStarted, setHasStarted] = useState(false);
-
-  // Typing-intro state
   const [displayedText, setDisplayedText] = useState("");
-  const [kbdHeight, setKbdHeight] = useState(0);
 
-  // Ref for FlatList to control scrolling
-  const flatListRef = useRef<FlatList<Message>>(null);
+  const flatListRef = useRef<FlatList<ChatItem>>(null);
 
-  // ① Type-out the AI greeting on first load
+  /** Keep a history of card groups, each locked to its insertion point (afterIndex) */
+  const [cardBlocks, setCardBlocks] = useState<
+    Array<{ key: string; afterIndex: number; cards: Card[] }>
+  >([]);
+  const lastSignature = useRef<string | null>(null);
+
+  // Whenever restaurantCards changes, append a brand new card block after
+  // the most recent AI message. Old blocks remain in place.
+  useEffect(() => {
+    if (!restaurantCards || restaurantCards.length === 0) return;
+
+    // Minimal signature to avoid duplicate inserts on re-renders
+    const sig = JSON.stringify(
+      restaurantCards.map((c) => ({
+        n: c.name,
+        r: c.rating ?? null,
+        e: c.eta,
+        u: c.imageUrl ?? null,
+      }))
+    );
+
+    if (sig === lastSignature.current) return;
+    lastSignature.current = sig;
+
+    // Insert AFTER the latest AI message at the moment of creation
+    const afterIndex = messages.length - 1;
+
+    setCardBlocks((prev) => [
+      ...prev,
+      {
+        key: `cards-${Date.now()}-${prev.length}`,
+        afterIndex,
+        cards: restaurantCards,
+      },
+    ]);
+
+    // Give the UI a beat, then scroll to the bottom
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+  }, [restaurantCards]); // ← only react to card changes
+
+  // Type-out the intro on first load
   useEffect(() => {
     if (!hasStarted && messages.length > 0) {
       const full = messages[0].content;
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-
       let idx = 1;
       const timer = setInterval(() => {
         if (idx <= full.length) {
@@ -68,31 +102,57 @@ export default function ChatScreen() {
           clearInterval(timer);
         }
       }, 40);
-
       return () => clearInterval(timer);
     }
   }, [messages, hasStarted]);
 
-  // When the user sends a message
   const onSend = () => {
-    const text = draft.trim();
-    if (!text || loading) return;
+    const t = draft.trim();
+    if (!t || loading) return;
     if (!hasStarted) setHasStarted(true);
-    sendMessage(text);
+    sendMessage(t);
     setDraft("");
-    // scroll to bottom after sending
-    flatListRef.current?.scrollToEnd({ animated: true });
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
+
+  // Build a quick lookup so we can inject card blocks after their target message indexes
+  const blocksByAfterIndex = useMemo(() => {
+    const map = new Map<number, Array<{ key: string; cards: Card[] }>>();
+    for (const b of cardBlocks) {
+      if (!map.has(b.afterIndex)) map.set(b.afterIndex, []);
+      map.get(b.afterIndex)!.push({ key: b.key, cards: b.cards });
+    }
+    return map;
+  }, [cardBlocks]);
+
+  // Merge messages + any card blocks that belong after each message
+  const chatData: ChatItem[] = useMemo(() => {
+    const items: ChatItem[] = [];
+    messages.forEach((m, i) => {
+      items.push({ type: "message", key: `msg-${i}`, message: m });
+      const blocks = blocksByAfterIndex.get(i);
+      if (blocks && blocks.length) {
+        for (const b of blocks) {
+          items.push({ type: "cards", key: b.key, cards: b.cards });
+        }
+      }
+    });
+    return items;
+  }, [messages, blocksByAfterIndex]);
+
+  // Determine the key of the most recent (latest) card block for enabling selection
+  const latestBlockKey = cardBlocks.length
+    ? cardBlocks[cardBlocks.length - 1].key
+    : null;
 
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      // adjust if you have navbars/headers above
       keyboardVerticalOffset={0}
     >
       <SafeAreaView style={styles.container}>
-        {/* ─── Top Bar ───────────────────────────────────── */}
+        {/* Top bar */}
         <View style={styles.topBar}>
           <TouchableOpacity>
             <Ionicons name="time-outline" size={24} color="#000" />
@@ -102,77 +162,82 @@ export default function ChatScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* ─── Logo ──────────────────────────────────────── */}
+        {/* Logo */}
         <View style={styles.logoArea}>
           <Image source={logo} style={styles.logo} />
         </View>
 
-        {/* ─── Main Content: intro+quick vs. chat log ────── */}
+        {/* Chat area */}
         <View style={[styles.textArea, hasStarted && styles.textAreaChat]}>
           {!hasStarted ? (
-            <>
-              {/* Typing intro */}
-              <Text
-                style={[
-                  styles.introText,
-                  {
-                    marginBottom: INPUT_BAR_HEIGHT + QUICK_GAP,
-                  },
-                ]}
-              >
-                {displayedText}
-              </Text>
-
-              {/* Quick-access scroll */}
-              <View
-                style={[
-                  styles.quickScrollWrapper,
-                  {
-                    bottom: INPUT_BOTTOM + INPUT_BAR_HEIGHT + QUICK_GAP,
-                  },
-                ]}
-              >
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.quickContainer}
-                >
-                  {mockQuickTexts.map((text, i) => (
-                    <View key={i} style={styles.quickItemWrapper}>
-                      <Text style={styles.quickText}>{text}</Text>
-                    </View>
-                  ))}
-                </ScrollView>
-              </View>
-            </>
+            <Text
+              style={[
+                styles.introText,
+                { marginBottom: INPUT_BAR_HEIGHT + 16 },
+              ]}
+            >
+              {displayedText}
+            </Text>
           ) : (
-            // Chat history
             <View
               style={[
                 styles.chatContainer,
-                {
-                  paddingBottom: INPUT_BAR_HEIGHT + INPUT_BOTTOM,
-                },
+                { paddingBottom: INPUT_BAR_HEIGHT + INPUT_BOTTOM },
               ]}
             >
-              <FlatList<Message>
+              <FlatList<ChatItem>
                 ref={flatListRef}
-                data={messages}
-                keyExtractor={(_, i) => String(i)}
-                renderItem={({ item }) => (
-                  <ChatBubble content={item.content} role={item.role} />
-                )}
-                style={styles.chatList}
+                data={chatData}
+                keyExtractor={(item) => item.key}
                 contentContainerStyle={styles.chatContent}
                 onContentSizeChange={() =>
                   flatListRef.current?.scrollToEnd({ animated: true })
                 }
+                renderItem={({ item }) => {
+                  if (item.type === "message") {
+                    return (
+                      <ChatBubble
+                        content={item.message.content}
+                        role={item.message.role}
+                      />
+                    );
+                  }
+
+                  // Render card block; only the latest block is interactive to avoid
+                  // selecting from stale groups
+                  const isLatest = item.key === latestBlockKey;
+
+                  return (
+                    <View style={styles.cardBlock}>
+                      <FlatList
+                        data={item.cards}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        keyExtractor={(_, idx) => `${item.key}-c${idx}`}
+                        contentContainerStyle={{ paddingHorizontal: 16 }}
+                        renderItem={({ item: c, index }) => (
+                          <RestaurantCard
+                            name={c.name}
+                            rating={c.rating}
+                            eta={c.eta}
+                            imageUrl={c.imageUrl}
+                            onOrderPress={
+                              isLatest
+                                ? () => selectRestaurant(index)
+                                : undefined
+                            }
+                          />
+                        )}
+                      />
+                    </View>
+                  );
+                }}
               />
             </View>
           )}
         </View>
 
-        {/* ─── Floating Input Bar ───────────────────────── */}
+        {/* Input bar */}
         <View style={[styles.inputWrapper, { bottom: INPUT_BOTTOM }]}>
           <View style={styles.inputBar}>
             <TextInput
@@ -180,17 +245,13 @@ export default function ChatScreen() {
               placeholder="Ask something"
               placeholderTextColor="#666"
               value={draft}
-              onChangeText={(text) => {
-                setDraft(text);
-                // keep scroll at bottom while typing
+              onChangeText={(t) => {
+                setDraft(t);
                 flatListRef.current?.scrollToEnd({ animated: false });
               }}
-              onFocus={() =>
-                flatListRef.current?.scrollToEnd({ animated: true })
-              }
-              editable={!loading}
               onSubmitEditing={onSend}
               returnKeyType="send"
+              editable={!loading}
             />
             <TouchableOpacity
               style={styles.sendButton}
@@ -242,32 +303,21 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginHorizontal: 16,
   },
-  quickScrollWrapper: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: INPUT_BAR_HEIGHT + QUICK_GAP + INPUT_BOTTOM,
-    height: 48,
-    alignItems: "center",
-  },
-  quickContainer: { paddingHorizontal: 16, alignItems: "center" },
-  quickItemWrapper: {
-    borderWidth: 1,
-    borderColor: "#DDD",
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginRight: 12,
-    backgroundColor: "#FFF",
-  },
-  quickText: { fontSize: 14, color: "#333" },
+
   chatContainer: {
     flex: 1,
     paddingTop: 3,
-    paddingBottom: INPUT_BAR_HEIGHT + INPUT_BOTTOM,
   },
-  chatList: { flex: 1 },
-  chatContent: { paddingHorizontal: 16 },
+  chatContent: {
+    paddingHorizontal: 16,
+  },
+
+  // fixes card height so they never overflow
+  cardBlock: {
+    height: 140,
+    marginVertical: 8,
+  },
+
   inputWrapper: {
     position: "absolute",
     width: INPUT_WIDTH,
