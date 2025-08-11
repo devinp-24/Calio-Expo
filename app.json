@@ -13,6 +13,9 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": ["ubereats", "doordash"]
+      },
       "supportsTablet": true
     },
     "android": {

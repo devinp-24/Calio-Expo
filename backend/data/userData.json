@@ -323,5 +323,135 @@
     "occasion": null,
     "serviceType": "delivery",
     "timestamp": "2025-08-11T10:27:55.945Z"
+  },
+  "944df502-fffc-495f-a825-c4859345cb80": {
+    "lastOrder": "I want something new today",
+    "cuisine": null,
+    "mood": "curious",
+    "occasion": "trying something new",
+    "serviceType": null,
+    "timestamp": "2025-08-11T11:20:29.198Z"
+  },
+  "05b7f6d1-e8b1-4bcb-b451-78e5464a913a": {
+    "lastOrder": "Tha k you madam",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-11T11:23:09.512Z",
+    "selectedRestaurant": "Poke & Co - Gate Building"
+  },
+  "387bac62-00f5-4c4d-8c6b-089d8573631e": {
+    "lastOrder": "Breakfast",
+    "cuisine": null,
+    "mood": null,
+    "occasion": "Breakfast",
+    "serviceType": null,
+    "timestamp": "2025-08-11T11:53:14.875Z"
+  },
+  "712133a9-074a-4679-aa99-6f1e1bba92eb": {
+    "lastOrder": "Snack",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-11T12:07:22.409Z"
+  },
+  "dcec9a4e-96ce-4c81-ba13-a2f51e48cc23": {
+    "lastOrder": "Delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-11T13:58:36.590Z",
+    "selectedRestaurant": "PUBLIC"
+  },
+  "cb0dbdb9-af78-4dee-a2f2-5b4f29856397": {
+    "lastOrder": "🍝 Dinner",
+    "cuisine": "Italian",
+    "mood": null,
+    "occasion": "Dinner",
+    "serviceType": null,
+    "timestamp": "2025-08-11T13:59:34.156Z"
+  },
+  "e1ec75e3-b26c-44ef-bc0d-a714738a4dc9": {
+    "lastOrder": "Delivery pls",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-11T14:02:04.194Z"
+  },
+  "33387c94-4e02-4812-9598-0733c4c77c3f": {
+    "selectedRestaurant": "ZAM ZAM MANDI, Deira Branch",
+    "timestamp": "2025-08-11T14:06:03.109Z"
+  },
+  "5a7757a7-dade-4305-a3d6-420d5abb5859": {
+    "lastOrder": "More",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-11T14:13:59.002Z",
+    "selectedRestaurant": "Chich khane Restaurant & Coffee Shop"
+  },
+  "138a105f-c58d-4030-8be3-0982af216f47": {
+    "lastOrder": "Dinner ideas",
+    "cuisine": null,
+    "mood": null,
+    "occasion": "dinner",
+    "serviceType": null,
+    "timestamp": "2025-08-11T14:14:26.044Z"
+  },
+  "2dc8bc0d-6d70-48c8-b3a6-53a7106661ab": {
+    "lastOrder": "Dinner ideas",
+    "cuisine": null,
+    "mood": null,
+    "occasion": "dinner",
+    "serviceType": null,
+    "timestamp": "2025-08-11T14:26:26.164Z"
+  },
+  "6eb4808e-6366-416f-a2d0-ba77b9cd9f3c": {
+    "lastOrder": "Give me Dinner ideas",
+    "cuisine": null,
+    "mood": null,
+    "occasion": "dinner",
+    "serviceType": null,
+    "timestamp": "2025-08-11T14:29:41.778Z"
+  },
+  "6b9878cf-e594-40ca-9334-c6c0e03feac3": {
+    "cuisine": null,
+    "timestamp": "2025-08-11T14:48:46.245Z",
+    "lastOrder": "Delivery pls",
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery"
+  },
+  "5e40d4b7-ba8f-49cb-b297-24221af9bdd7": {
+    "lastOrder": "Thank you bye",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-11T14:50:00.282Z",
+    "selectedRestaurant": "SLAY Bar and Kitchen"
+  },
+  "28916bd9-3e6b-4a05-b96c-f7b7ad5d3589": {
+    "lastOrder": "Delivery pls",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-11T15:02:28.237Z",
+    "selectedRestaurant": "Naughty Pizza Dubai"
+  },
+  "3b3f9994-78ff-4ff6-b5ba-c1e8fc383faa": {
+    "lastOrder": "Pickup",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "pickup",
+    "timestamp": "2025-08-11T15:35:36.093Z",
+    "selectedRestaurant": "Carluccio's - Italian Restaurant in Dubai Mall"
   }
 }

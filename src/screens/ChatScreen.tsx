@@ -33,12 +33,12 @@ const INPUT_BAR_HEIGHT = Platform.OS === "ios" ? 56 : 48;
 const QUICK_GAP = 8; // ← spacing above input for quick pills
 
 // Quick-access mock texts (same as original)
-const mockQuickTexts = [
-  "What's for dinner?",
-  "Lunch ideas?",
-  "Local delivery finds",
-  "Dinner for two?",
-];
+// const mockQuickTexts = [
+//   "What's for dinner?",
+//   "Lunch ideas?",
+//   "Local delivery finds",
+//   "Dinner for two?",
+// ];
 
 type Card = {
   name: string;
@@ -52,14 +52,28 @@ type ChatItem =
   | { type: "cards"; key: string; cards: Card[] };
 
 export default function ChatScreen() {
-  const { messages, loading, sendMessage, restaurantCards, selectRestaurant } =
-    useChat();
+  const {
+    messages,
+    loading,
+    sendMessage,
+    restaurantCards,
+    selectRestaurant,
+    quickPill,
+    showNearbyOptions,
+    showSurpriseMe,
+    orderWithApp,
+    handleAssistantButton,
+  } = useChat();
 
   const [draft, setDraft] = useState("");
   const [hasStarted, setHasStarted] = useState(false);
   const [displayedText, setDisplayedText] = useState("");
 
   const flatListRef = useRef<FlatList<ChatItem>>(null);
+  const pills = useMemo(
+    () => ["📍 Nearby", "🎲 Surprise me", ...(quickPill ? [quickPill] : [])],
+    [quickPill]
+  );
 
   /** Maintain blocks of restaurant cards, each anchored after the message present at creation time */
   const [cardBlocks, setCardBlocks] = useState<
@@ -161,7 +175,6 @@ export default function ChatScreen() {
   const latestBlockKey = cardBlocks.length
     ? cardBlocks[cardBlocks.length - 1].key
     : null;
-
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -198,14 +211,46 @@ export default function ChatScreen() {
                 {displayedText}
               </Text>
 
-              {/* Quick-access pills (re-added) */}
+              {/* Quick-access pills */}
               <QuickPills
-                items={mockQuickTexts} // today: static list
+                items={pills}
                 bottomOffset={INPUT_BOTTOM + INPUT_BAR_HEIGHT + QUICK_GAP}
-                onPress={(txt) => {
+                onPress={async (txt) => {
+                  if (/nearby/i.test(txt)) {
+                    if (!hasStarted) setHasStarted(true);
+                    if (!loading) {
+                      await Haptics.impactAsync(
+                        Haptics.ImpactFeedbackStyle.Medium
+                      );
+                      await showNearbyOptions();
+                      setTimeout(
+                        () =>
+                          flatListRef.current?.scrollToEnd({ animated: true }),
+                        120
+                      );
+                    }
+                    return;
+                  }
+
+                  if (/surprise/i.test(txt)) {
+                    // 👈 NEW
+                    if (!hasStarted) setHasStarted(true);
+                    if (!loading) {
+                      await Haptics.impactAsync(
+                        Haptics.ImpactFeedbackStyle.Medium
+                      );
+                      await showSurpriseMe();
+                      setTimeout(
+                        () =>
+                          flatListRef.current?.scrollToEnd({ animated: true }),
+                        120
+                      );
+                    }
+                    return;
+                  }
+
+                  // others → existing path
                   sendNow(txt);
-                  // optional: auto-send
-                  // setHasStarted(true); sendMessage(txt);
                 }}
               />
             </>
@@ -231,6 +276,8 @@ export default function ChatScreen() {
                       <ChatBubble
                         content={item.message.content}
                         role={item.message.role}
+                        buttons={item.message.buttons}
+                        onButtonPress={(val) => handleAssistantButton(val)} // 👈 from the hook
                       />
                     );
                   }

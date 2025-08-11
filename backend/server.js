@@ -32,6 +32,8 @@ app.use((req, res, next) => {
 app.use("/api/health", healthRouter);
 app.use("/api/user", userRouter);
 app.use("/api", restaurantsRouter);
+app.use("/api", restaurantsRouter);
+
 app.use("/api", chatRouter);
 app.use("/api/auth", authRouter);
 
