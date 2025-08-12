@@ -12,7 +12,7 @@ import {
   Platform,
   FlatList,
   KeyboardAvoidingView,
-  ScrollView, // ← re-added for quick pills
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -106,7 +106,7 @@ export default function ChatScreen() {
     if (sig === lastSignature.current) return;
     lastSignature.current = sig;
 
-    const afterIndex = messages.length - 1; // anchor after the latest AI message now
+    const afterIndex = messages.length - 1;
     setCardBlocks((prev) => [
       ...prev,
       {
@@ -119,7 +119,6 @@ export default function ChatScreen() {
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   }, [restaurantCards, messages.length]);
 
-  // Type-out intro from the first AI message
   useEffect(() => {
     if (!hasStarted && messages.length > 0) {
       const full = messages[0].content;
@@ -146,7 +145,6 @@ export default function ChatScreen() {
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
-  // Map: messageIndex -> list of blocks to insert after it
   const blocksByAfterIndex = useMemo(() => {
     const map = new Map<number, Array<{ key: string; cards: Card[] }>>();
     for (const b of cardBlocks) {
@@ -156,7 +154,6 @@ export default function ChatScreen() {
     return map;
   }, [cardBlocks]);
 
-  // Merge messages with their card blocks
   const chatData: ChatItem[] = useMemo(() => {
     const items: ChatItem[] = [];
     messages.forEach((m, i) => {
@@ -171,7 +168,6 @@ export default function ChatScreen() {
     return items;
   }, [messages, blocksByAfterIndex]);
 
-  // Only the most recent card block should be interactive
   const latestBlockKey = cardBlocks.length
     ? cardBlocks[cardBlocks.length - 1].key
     : null;
@@ -249,13 +245,11 @@ export default function ChatScreen() {
                     return;
                   }
 
-                  // others → existing path
                   sendNow(txt);
                 }}
               />
             </>
           ) : (
-            // Chat history + injected restaurant card blocks
             <View
               style={[
                 styles.chatContainer,
@@ -381,7 +375,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
 
-  // Quick pills (same look as before)
   quickScrollWrapper: {
     position: "absolute",
     left: 0,
@@ -410,7 +403,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
 
-  // Card block row under a message
   cardBlock: {
     height: 180,
     marginVertical: 8,
