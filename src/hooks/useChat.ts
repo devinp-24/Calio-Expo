@@ -12,14 +12,67 @@ import {
 } from "../prompts/systemPrompt";
 import { chatWithAgent } from "../api/openai";
 import * as Location from "expo-location";
-import { Platform } from "react-native";
+import { Platform, Linking } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import uuid from "react-native-uuid";
+const VENDOR = {
+  "uber-eats": {
+    label: "Uber Eats",
+    scheme: "ubereats://",
+    iosStore: "https://apps.apple.com/app/ubereats-food-delivery/id1058959277",
+    androidStore: "market://details?id=com.ubercab.eats",
+    androidStoreWeb:
+      "https://play.google.com/store/apps/details?id=com.ubercab.eats",
+  },
+  doordash: {
+    label: "DoorDash",
+    scheme: "doordash://",
+    iosStore: "https://apps.apple.com/app/doordash-food-delivery/id719972451",
+    androidStore: "market://details?id=com.dd.doordash",
+    androidStoreWeb:
+      "https://play.google.com/store/apps/details?id=com.dd.doordash",
+  },
+  boons: {
+    label: "Boons",
+    scheme: "boons://",
+    iosStore: "https://apps.apple.com/us/app/boons-local-food-delivery/id6504396870", 
+    androidStore: "market://details?id=com.boons.boons", 
+    androidStoreWeb: "https://www.boons.io/order",
+  },
+} as const;
+type VendorKey = keyof typeof VENDOR;
+
+async function openVendor(vendor: VendorKey) {
+  const v = VENDOR[vendor];
+  if (Platform.OS === "ios") {
+    const can = await Linking.canOpenURL(v.scheme);
+    if (can) return Linking.openURL(v.scheme);
+    return Linking.openURL(v.iosStore);
+  } else {
+    try {
+      const can = await Linking.canOpenURL(v.scheme);
+      if (can) return Linking.openURL(v.scheme);
+    } catch {}
+    try {
+      return Linking.openURL(v.androidStore);
+    } catch {
+      return Linking.openURL(v.androidStoreWeb);
+    }
+  }
+}
+
 export type Button = {
   label: string;
   value?: string;
   style?: string;
   url?: string;
+};
+
+type NearbyApiItem = {
+  name: string;
+  rating?: number; // <- required
+  eta?: number;
+  image_url?: string;
 };
 
 export type Message = {
@@ -39,7 +92,7 @@ type Memory = {
 };
 
 const { extra } = Constants.manifest2 ?? Constants.expoConfig ?? {};
-const API_BASE: string = extra?.API_BASE ?? "http://192.168.1.81:3001/api";
+const API_BASE: string = extra?.API_BASE ?? "http://172.20.10.3:3001/api";
 
 export function useChat() {
   const pageRef = useRef(0);
@@ -51,6 +104,7 @@ export function useChat() {
     apiKey: "",
     dangerouslyAllowBrowser: true,
   });
+  const [quickPill, setQuickPill] = useState<string | null>(null);
 
   const [userId, setUserId] = useState<string | null>(null);
   const [memory, setMemory] = useState<Memory | null>(null);
@@ -65,7 +119,7 @@ export function useChat() {
   const [restaurantCards, setRestaurantCards] = useState<
     {
       name: string;
-      rating: number;
+      rating?: number; // <- optional
       eta: number;
       description: string;
       imageUrl?: string;
@@ -114,6 +168,46 @@ You are a JSON extractor. Given a user’s message, return EXACTLY a JSON object
 Respond with only the JSON object—no extra text.
 `.trim();
 
+  // Fun pool to draw from
+  const SURPRISE_CUISINES = [
+    "Nikkei (Japanese–Peruvian)",
+    "Georgian supra feast",
+    "Oaxacan mole",
+    "Kaiseki",
+    "Sichuan hot pot",
+    "New Nordic",
+    "Ethiopian injera platter",
+    "Laotian",
+    "Uzbek plov",
+    "Peranakan (Nyonya)",
+    "Basque pintxos",
+    "Yakitori omakase",
+    "Yucatecan cochinita",
+    "Keralan seafood",
+    "Levantine mezze",
+    "Hunan",
+    "Sardinian",
+    "Filipino kamayan",
+    "Jamaican jerk",
+    "Molecular gastronomy tasting",
+  ];
+
+  // One-liner crafted by OpenAI
+  const surpriseLinePrompt = `
+You are a playful food assistant. The user said "Surprise me".
+Write ONE short line (<= 18 words) that warmly acknowledges the surprise
+and reveals the chosen cuisine as: "{cuisine}".
+No bullet points. Keep it breezy and simple.
+`.trim();
+
+  const pickRandomCuisine = (exclude?: string) => {
+    const pool = SURPRISE_CUISINES.filter((c) => c !== exclude);
+    return pool[Math.floor(Math.random() * pool.length)];
+  };
+
+  // NEW: we keep the chosen cuisine here until the user confirms
+  const [pendingSurprise, setPendingSurprise] = useState<string | null>(null);
+
   useEffect(() => {
     (async () => {
       let id = await AsyncStorage.getItem("foodAgentUserId");
@@ -129,6 +223,13 @@ Respond with only the JSON object—no extra text.
         setMemory({});
       }
     })();
+  }, []);
+
+  useEffect(() => {
+    const update = () => setQuickPill(mealForHour(new Date().getHours()));
+    update();
+    const id = setInterval(update, 60 * 1000); // optional
+    return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
@@ -181,6 +282,37 @@ Respond with only the JSON object—no extra text.
     })();
   }, [messages.length]);
 
+  const mapNearbyToCards = (rows: NearbyApiItem[]) =>
+    rows.map((r) => ({
+      name: r.name ?? "Unknown",
+      rating: typeof r.rating === "number" ? r.rating : undefined, // ← was 0
+      eta: typeof r.eta === "number" ? r.eta : 10,
+      description: "",
+      imageUrl: r.image_url ?? undefined,
+    }));
+  async function handleAssistantButton(value?: string) {
+    if (!value) return;
+
+    
+    if (value === "uber-eats" || value === "doordash" || value === "boons") {
+    return orderWithApp(value as VendorKey); 
+  }
+
+    // Service-type buttons → reuse your pipeline
+    if (value === "delivery" || value === "pickup" || value === "dine-in") {
+      
+      // This will append a user bubble and trigger the existing logic
+      return sendMessage(
+        value === "dine-in"
+          ? "Dine-in"
+          : value[0].toUpperCase() + value.slice(1)
+      );
+    }
+
+    // fallback: treat as a simple user reply
+    return sendMessage(value);
+  }
+
   async function askServiceType(cuisine: string, history: Message[]) {
     setAskedService(true);
     setLoading(true);
@@ -212,27 +344,183 @@ Respond with only the JSON object—no extra text.
     setLoading(false);
   }
 
+  // --- ✨ NEW: Nearby flow (inside this hook file) ---
+  async function showNearbyOptions(): Promise<void> {
+    if (loading) return; // guard
+    setLoading(true);
+
+    // 0) show the user's tap as a bubble (same behavior as other pills)
+    setMessages((ms) => [...ms, { role: "user", content: "📍 Nearby" }]);
+
+    try {
+      // 1) permissions
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setMessages((ms) => [
+          ...ms,
+          { role: "assistant", content: "I couldn’t access your location." },
+        ]);
+        return;
+      }
+
+      // 2) coords
+      const { coords } = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      const { latitude, longitude } = coords;
+
+      // 3) fetch nearby (limit server-side to 30)
+      const url =
+        `${API_BASE}/restaurants/nearby?lat=${encodeURIComponent(latitude)}` +
+        `&lon=${encodeURIComponent(longitude)}&limit=30`;
+
+      let rows: NearbyApiItem[] = [];
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        rows = Array.isArray(json) ? json : json?.results ?? [];
+      } catch (err) {
+        console.warn("[nearby] request failed:", err);
+        rows = [];
+      }
+
+      if (!rows.length) {
+        setMessages((ms) => [
+          ...ms,
+          {
+            role: "assistant",
+            content: "I couldn’t find any nearby restaurants.",
+          },
+        ]);
+        return;
+      }
+
+      // 4) 3-at-a-time pagination (reuse your existing 'more' flow)
+      allRestaurantsRef.current = rows as any[];
+      pageRef.current = 0;
+
+      const first3 = rows.slice(0, 3);
+      fullOptionsRef.current = first3 as any[];
+      setSuggestionsShown(true);
+      setSelectedRestaurant(null);
+      if (suggestions.length) setSuggestions([]);
+
+      // 5) assistant line ABOVE the cards
+      setMessages((ms) => [
+        ...ms,
+        { role: "assistant", content: "Here are some nearby spots:" },
+      ]);
+
+      // allow the assistant bubble to mount before anchoring the cards
+      await new Promise((r) => setTimeout(r, 0));
+
+      // 6) show only the first 3 cards now
+      setRestaurantCards(
+        first3.map((r) => ({
+          name: r.name ?? "Unknown",
+          rating: typeof r.rating === "number" ? r.rating : undefined, // optional
+          eta: typeof r.eta === "number" ? r.eta : 10,
+          description: "",
+          imageUrl: r.image_url ?? undefined,
+        }))
+      );
+    } catch (e) {
+      console.warn("[nearby] unexpected error:", e);
+      setMessages((ms) => [
+        ...ms,
+        {
+          role: "assistant",
+          content: "Sorry—something went wrong fetching nearby places.",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function showSurpriseMe(): Promise<void> {
+    if (loading) return;
+    setLoading(true);
+
+    // user bubble
+    const userMsg: Message = { role: "user", content: "🎲 Surprise me" };
+    setMessages((ms) => [...ms, userMsg]);
+
+    try {
+      const pick = pickRandomCuisine();
+      setPendingSurprise(pick); // <- do NOT write to memory yet
+
+      const aiRaw = await chatWithAgent(
+        [...messages, userMsg],
+        surpriseLinePrompt.replace("{cuisine}", pick)
+      );
+      const aiMsg: Message = {
+        role: aiRaw.role as any,
+        content: aiRaw.content ?? `Fun choice—let’s try ${pick}.`,
+      };
+      setMessages((ms) => [...ms, aiMsg]);
+      // now we wait for the user's confirmation/denial in sendMessage()
+    } catch (e) {
+      console.warn("[surprise] error:", e);
+      setMessages((ms) => [
+        ...ms,
+        {
+          role: "assistant",
+          content: "Hmm, surprise fizzled. Want to try again?",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function selectRestaurant(idx: number) {
     const picked = fullOptionsRef.current[idx];
     setSelectedRestaurant(picked.name);
     await persistMemory({ selectedRestaurant: picked.name });
+
     const linkMsg: Message = {
       role: "assistant",
-      content: `Great choice—**${picked.name}** it is! 😊`,
+      content: `Great choice—**${picked.name}** it is! How would you like to order?`,
       buttons: [
-        {
-          label: "Order on Uber Eats",
-          url: `https://www.ubereats.com/ca/feed?diningMode=DELIVERY`,
-          style: "primary",
-        },
-        {
-          label: "Order with Boons",
-          url: "https://www.boons.io/order",
-          style: "primary",
-        },
+        // { label: "Order with Uber Eats", value: "uber-eats", style: "primary" },
+        // { label: "Order with DoorDash", value: "doordash", style: "primary" },
+        { label: "Order with boons", value: "boons", style: "primary" },
       ],
     };
+
     setMessages((ms) => [...ms, linkMsg]);
+  }
+
+  async function orderWithApp(vendor: VendorKey) {
+    const appLabel = VENDOR[vendor].label;
+    const rname =
+      selectedRestaurant ??
+      fullOptionsRef.current?.[0]?.name ??
+      "this restaurant";
+
+    // 1) user bubble
+    setMessages((ms) => [
+      ...ms,
+      { role: "user", content: `Order with ${appLabel}` },
+    ]);
+
+    // 2) assistant ack
+    setMessages((ms) => [
+      ...ms,
+      {
+        role: "assistant",
+        content: `Awesome — opening ${appLabel} for **${rname}**. Enjoy!`,
+      },
+    ]);
+
+    // 3) deep-link to app or store
+    try {
+      await openVendor(vendor);
+    } catch (e) {
+      console.warn("openVendor failed", e);
+    }
   }
 
   async function classifyAffirmation(text: string, last: string) {
@@ -354,6 +642,27 @@ Respond with ONLY the JSON object—no extra text.
     return parsed.changeMind === true;
   }
 
+  function mealForHour(h: number): string {
+    const breakfast = ["Give me Breakfast ideas"];
+
+    const lunch = ["Give me Lunch ideas"];
+
+    const dinner = ["Give me Dinner ideas"];
+
+    const snack = ["Give me Snack ideas"];
+
+    // pick pool by hour (same ranges you had)
+    let pool = snack;
+    if (h >= 5 && h < 11) pool = breakfast;
+    else if (h >= 11 && h < 17) pool = lunch;
+    else if (h >= 17 && h < 21) pool = dinner;
+
+    // stable-ish selection within the current hour/day
+    const now = new Date();
+    const seed = (h + now.getDate() + 31 * now.getMonth()) % pool.length;
+    return pool[seed];
+  }
+
   const sendMessage = async (text: string) => {
     console.log("[useChat] ▶ sendMessage:", text);
 
@@ -437,6 +746,62 @@ Respond with ONLY the JSON object—no extra text.
       setMemory((m) => ({ ...(m ?? {}), cuisine }));
       await persistMemory({ cuisine });
       return askServiceType(cuisine, [...messages, userMsg]);
+    }
+    if (pendingSurprise) {
+      setLoading(true);
+      try {
+        // look at the last assistant line (the surprise one-liner)
+        const lastAssistant = [...messages]
+          .reverse()
+          .find((m) => m.role === "assistant");
+        const lastText = lastAssistant?.content ?? "Do you want that cuisine?";
+
+        const intent = await classifyAffirmation(trimmed, lastText);
+        if (intent === "affirm") {
+          // user accepts → now commit cuisine and continue normal flow
+          setMemory((m) => ({ ...(m ?? {}), cuisine: pendingSurprise }));
+          await persistMemory({ cuisine: pendingSurprise });
+
+          setPendingSurprise(null);
+          setAskedService(false);
+          setSuggestionsShown(false);
+          fullOptionsRef.current = [];
+          allRestaurantsRef.current = [];
+          pageRef.current = 0;
+          setRestaurantOptions([]);
+          setRestaurantCards([]);
+          setSelectedRestaurant(null);
+
+          // ask service type for the chosen cuisine
+          setLoading(false);
+          return askServiceType(pendingSurprise, [...messages, userMsg]);
+        }
+
+        // deny/ambiguous → offer another surprise
+        const nextPick = pickRandomCuisine(pendingSurprise);
+        setPendingSurprise(nextPick);
+
+        const aiRaw = await chatWithAgent(
+          [...messages, userMsg],
+          surpriseLinePrompt.replace("{cuisine}", nextPick)
+        );
+        const aiMsg: Message = {
+          role: aiRaw.role as any,
+          content: aiRaw.content ?? `No problem—how about ${nextPick}?`,
+        };
+        setMessages((ms) => [...ms, aiMsg]);
+      } catch (e) {
+        console.warn("[surprise confirm] error:", e);
+        setMessages((ms) => [
+          ...ms,
+          {
+            role: "assistant",
+            content: "Got it. Want another surprise cuisine?",
+          },
+        ]);
+      }
+      setLoading(false);
+      return; // stop the rest of sendMessage while we’re in the surprise loop
     }
 
     if (curCuisine && curService && !suggestionsShown) {
@@ -651,5 +1016,10 @@ Respond with ONLY the JSON object—no extra text.
     selectedRestaurant,
     selectRestaurant,
     suggestions,
+    quickPill,
+    showNearbyOptions,
+    showSurpriseMe,
+    orderWithApp,
+    handleAssistantButton,
   };
 }

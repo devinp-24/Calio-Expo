@@ -21,7 +21,7 @@ import AuthButton from "../../components/AuthButton";
 
 const googleLogo = require("../../assets/images/google.png");
 const appleLogo = require("../../assets/images/apple-logo.png");
-const logoImage = require("../../assets/images/logo.png");
+const logoImage = require("../../assets/images/boons-logo-white.png");
 const images = [
   require("../../assets/images/image.png"),
   require("../../assets/images/image2.png"),
@@ -164,10 +164,10 @@ const styles = StyleSheet.create({
     paddingTop: -40,
   },
   logo: {
-    width: 160,
-    height: 83,
+    width: 240,
+    height: 183,
     resizeMode: "contain",
-    marginBottom: 24,
+    marginBottom: -40,
   },
   iconImage: { width: 18, height: 18 },
 

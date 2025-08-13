@@ -323,5 +323,273 @@
     "occasion": null,
     "serviceType": "delivery",
     "timestamp": "2025-08-11T10:27:55.945Z"
+  },
+  "944df502-fffc-495f-a825-c4859345cb80": {
+    "lastOrder": "I want something new today",
+    "cuisine": null,
+    "mood": "curious",
+    "occasion": "trying something new",
+    "serviceType": null,
+    "timestamp": "2025-08-11T11:20:29.198Z"
+  },
+  "05b7f6d1-e8b1-4bcb-b451-78e5464a913a": {
+    "lastOrder": "Tha k you madam",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-11T11:23:09.512Z",
+    "selectedRestaurant": "Poke & Co - Gate Building"
+  },
+  "387bac62-00f5-4c4d-8c6b-089d8573631e": {
+    "lastOrder": "Breakfast",
+    "cuisine": null,
+    "mood": null,
+    "occasion": "Breakfast",
+    "serviceType": null,
+    "timestamp": "2025-08-11T11:53:14.875Z"
+  },
+  "712133a9-074a-4679-aa99-6f1e1bba92eb": {
+    "lastOrder": "Snack",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-11T12:07:22.409Z"
+  },
+  "dcec9a4e-96ce-4c81-ba13-a2f51e48cc23": {
+    "lastOrder": "Delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-11T13:58:36.590Z",
+    "selectedRestaurant": "PUBLIC"
+  },
+  "cb0dbdb9-af78-4dee-a2f2-5b4f29856397": {
+    "lastOrder": "🍝 Dinner",
+    "cuisine": "Italian",
+    "mood": null,
+    "occasion": "Dinner",
+    "serviceType": null,
+    "timestamp": "2025-08-11T13:59:34.156Z"
+  },
+  "e1ec75e3-b26c-44ef-bc0d-a714738a4dc9": {
+    "lastOrder": "Delivery pls",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-11T14:02:04.194Z"
+  },
+  "33387c94-4e02-4812-9598-0733c4c77c3f": {
+    "selectedRestaurant": "ZAM ZAM MANDI, Deira Branch",
+    "timestamp": "2025-08-11T14:06:03.109Z"
+  },
+  "5a7757a7-dade-4305-a3d6-420d5abb5859": {
+    "lastOrder": "More",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-11T14:13:59.002Z",
+    "selectedRestaurant": "Chich khane Restaurant & Coffee Shop"
+  },
+  "138a105f-c58d-4030-8be3-0982af216f47": {
+    "lastOrder": "Dinner ideas",
+    "cuisine": null,
+    "mood": null,
+    "occasion": "dinner",
+    "serviceType": null,
+    "timestamp": "2025-08-11T14:14:26.044Z"
+  },
+  "2dc8bc0d-6d70-48c8-b3a6-53a7106661ab": {
+    "lastOrder": "Dinner ideas",
+    "cuisine": null,
+    "mood": null,
+    "occasion": "dinner",
+    "serviceType": null,
+    "timestamp": "2025-08-11T14:26:26.164Z"
+  },
+  "6eb4808e-6366-416f-a2d0-ba77b9cd9f3c": {
+    "lastOrder": "Give me Dinner ideas",
+    "cuisine": null,
+    "mood": null,
+    "occasion": "dinner",
+    "serviceType": null,
+    "timestamp": "2025-08-11T14:29:41.778Z"
+  },
+  "6b9878cf-e594-40ca-9334-c6c0e03feac3": {
+    "cuisine": null,
+    "timestamp": "2025-08-11T14:48:46.245Z",
+    "lastOrder": "Delivery pls",
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery"
+  },
+  "5e40d4b7-ba8f-49cb-b297-24221af9bdd7": {
+    "lastOrder": "Thank you bye",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-11T14:50:00.282Z",
+    "selectedRestaurant": "SLAY Bar and Kitchen"
+  },
+  "28916bd9-3e6b-4a05-b96c-f7b7ad5d3589": {
+    "lastOrder": "Delivery pls",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-11T15:02:28.237Z",
+    "selectedRestaurant": "Naughty Pizza Dubai"
+  },
+  "3b3f9994-78ff-4ff6-b5ba-c1e8fc383faa": {
+    "lastOrder": "Pickup",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "pickup",
+    "timestamp": "2025-08-11T15:35:36.093Z",
+    "selectedRestaurant": "Carluccio's - Italian Restaurant in Dubai Mall"
+  },
+  "d928aef9-7ab2-4033-ba7d-198b3c2a0d90": {
+    "selectedRestaurant": "Crab Hot Lau UBC",
+    "timestamp": "2025-08-11T16:00:33.741Z"
+  },
+  "3e837400-ad1a-4a23-ae78-02a4b2a6ba03": {
+    "lastOrder": "Delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-11T16:04:08.915Z",
+    "selectedRestaurant": "Sake Dining HASHIGO by Zakkushi"
+  },
+  "069765ce-65f7-4b1a-958b-864551a32975": {
+    "lastOrder": "more",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-11T16:08:46.602Z",
+    "selectedRestaurant": "Subway"
+  },
+  "08ccbe23-e776-4e0b-83a4-bd6a5cae664c": {
+    "lastOrder": "Delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-11T16:16:18.426Z"
+  },
+  "761d2f51-da7d-4226-be2c-709a284ad84d": {
+    "lastOrder": "Delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-12T09:39:06.504Z",
+    "selectedRestaurant": "El Rincón Mexicano"
+  },
+  "c5ea69f1-a70b-4a6f-be98-84ab05aa9a51": {
+    "selectedRestaurant": "Mercante",
+    "timestamp": "2025-08-12T10:01:21.472Z"
+  },
+  "3fe718b6-2c5e-458e-8814-4e52a6348dd7": {
+    "lastOrder": "Hi",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-13T08:32:26.277Z"
+  },
+  "5d27066f-a6ac-461a-b11f-d2938fda4f8b": {
+    "lastOrder": "Hi",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-13T09:07:56.178Z"
+  },
+  "156e4ed7-04cc-4f82-b84a-8097fea031e7": {
+    "lastOrder": "Fable Kitchen",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-13T09:20:22.131Z",
+    "selectedRestaurant": "Fable Kitchen"
+  },
+  "22c0e3e8-31b0-420a-8a46-4729fde7d606": {
+    "lastOrder": "Dining would be nice",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "dine-in",
+    "timestamp": "2025-08-13T09:23:13.199Z",
+    "selectedRestaurant": "The Anchor Eatery"
+  },
+  "8acfd66a-b8d1-49f3-8c84-937df37cd8df": {
+    "lastOrder": "Pick up.",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "pickup",
+    "timestamp": "2025-08-13T09:24:13.726Z",
+    "selectedRestaurant": "Maxine's Cafe & Bar"
+  },
+  "5dbb546a-f9e5-493c-a4e9-e5a3ff8cd87a": {
+    "lastOrder": "Delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-13T09:27:00.263Z",
+    "selectedRestaurant": "Tommie's Jerk"
+  },
+  "96348833-e3e2-49f3-8190-1835b1a10ecf": {
+    "lastOrder": "Delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-13T16:06:17.659Z",
+    "selectedRestaurant": "Greenhorn Cafe"
+  },
+  "74899585-e9e6-4985-9ac0-f44eeabed2fa": {
+    "lastOrder": "Delivery",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "delivery",
+    "timestamp": "2025-08-13T16:11:32.316Z",
+    "selectedRestaurant": "Craffles"
+  },
+  "be208708-65cb-43b9-ad44-f6331ebe200e": {
+    "lastOrder": "Pickup",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": "pickup",
+    "timestamp": "2025-08-13T16:13:19.982Z",
+    "selectedRestaurant": "WELA Healthy Foods | Smoothies | Fresh Juices - Vancouver"
+  },
+  "55a49c22-447d-4b13-9311-9985d2d4098f": {
+    "lastOrder": "Surprise me",
+    "cuisine": null,
+    "mood": null,
+    "occasion": null,
+    "serviceType": null,
+    "timestamp": "2025-08-13T16:16:00.024Z"
+  },
+  "bc3310ca-b99d-45ca-a5eb-625541abc9fc": {
+    "lastOrder": "Dinner Ideas",
+    "cuisine": null,
+    "mood": null,
+    "occasion": "dinner",
+    "serviceType": null,
+    "timestamp": "2025-08-14T05:11:47.956Z"
   }
 }

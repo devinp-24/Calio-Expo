@@ -1,5 +1,5 @@
 // // src/services/auth.ts
-// export const BASE_URL = "http://192.168.1.81:4000";
+// export const BASE_URL = "http://206.87.217.55:4000";
 
 // type TokenResponse = { token: string };
 
@@ -42,7 +42,7 @@ import Constants from "expo-constants";
 
 const { extra } = Constants.manifest2 ?? Constants.expoConfig ?? {};
 
-const BASE: string = extra?.API_BASE ?? "http://192.168.1.81:3001";
+const BASE: string = extra?.API_BASE ?? "http://206.87.217.55:3001";
 
 type Json = { message?: string; error?: string };
 
