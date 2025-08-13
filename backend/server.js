@@ -18,6 +18,10 @@ const { userRouter } = require("./routes/user");
 const { restaurantsRouter } = require("./routes/restaurants");
 const chatRouter = require("./routes/chat");
 
+
+const transcribeRoute = require("./routes/transcribe");
+
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -32,10 +36,11 @@ app.use((req, res, next) => {
 app.use("/api/health", healthRouter);
 app.use("/api/user", userRouter);
 app.use("/api", restaurantsRouter);
-app.use("/api", restaurantsRouter);
+
 
 app.use("/api", chatRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/transcribe", transcribeRoute);
 
 // 404 handler
 app.use((req, res) => res.status(404).json({ error: "Not Found" }));
