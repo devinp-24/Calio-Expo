@@ -1,5 +1,11 @@
 // src/screens/ChatScreen.tsx
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   SafeAreaView,
   View,
@@ -12,18 +18,20 @@ import {
   Platform,
   FlatList,
   KeyboardAvoidingView,
-  ScrollView, // ← re-added for quick pills
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { Audio, InterruptionModeIOS } from "expo-av";
 
 import { useChat, Message } from "../hooks/useChat";
 import ChatBubble from "../components/ChatBubble";
 import RestaurantCard from "../components/RestaurantCard";
 import QuickPills from "../components/QuickPills";
 import type { QuickPillsRef } from "../components/QuickPills";
+import Constants from "expo-constants";
 
-const logo = require("../assets/images/calio-orange-logo.png");
+const logo = require("../assets/images/boons-logo-orange.png");
 
 const { width } = Dimensions.get("window");
 const LOGO_HEIGHT = 60;
@@ -32,13 +40,17 @@ const INPUT_WIDTH = width - 32;
 const INPUT_BAR_HEIGHT = Platform.OS === "ios" ? 56 : 48;
 const QUICK_GAP = 8; // ← spacing above input for quick pills
 
+const { extra } =
+  (Constants as any).manifest2 ?? (Constants as any).expoConfig ?? {};
+const API_BASE: string = extra?.API_BASE ?? "http://172.20.10.3:3001/api";
+
 // Quick-access mock texts (same as original)
-const mockQuickTexts = [
-  "What's for dinner?",
-  "Lunch ideas?",
-  "Local delivery finds",
-  "Dinner for two?",
-];
+// const mockQuickTexts = [
+//   "What's for dinner?",
+//   "Lunch ideas?",
+//   "Local delivery finds",
+//   "Dinner for two?",
+// ];
 
 type Card = {
   name: string;
@@ -49,17 +61,49 @@ type Card = {
 
 type ChatItem =
   | { type: "message"; key: string; message: Message }
-  | { type: "cards"; key: string; cards: Card[] };
+  | { type: "cards"; key: string; cards: Card[] }
+  | { type: "voice"; key: string }; // details are looked up from voiceBlocks by key
+
+const VoiceBubble: React.FC<{ uri: string; durationMs: number }> = ({
+  uri,
+  durationMs,
+}) => {
+  const secs = Math.max(1, Math.round(durationMs / 1000));
+  return (
+    <View style={styles.voiceInner}>
+      <Ionicons name="mic" size={16} color="#000" />
+      <Text style={styles.voiceText}>{secs}s voice</Text>
+    </View>
+  );
+};
 
 export default function ChatScreen() {
-  const { messages, loading, sendMessage, restaurantCards, selectRestaurant } =
-    useChat();
+  const {
+    messages,
+    loading,
+    sendMessage,
+    restaurantCards,
+    selectRestaurant,
+    quickPill,
+    showNearbyOptions,
+    showSurpriseMe,
+    orderWithApp,
+    handleAssistantButton,
+  } = useChat();
 
   const [draft, setDraft] = useState("");
   const [hasStarted, setHasStarted] = useState(false);
   const [displayedText, setDisplayedText] = useState("");
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const longPressActiveRef = useRef(false);
 
   const flatListRef = useRef<FlatList<ChatItem>>(null);
+  const pills = useMemo(
+    () => ["📍 Nearby", "🎲 Surprise me", ...(quickPill ? [quickPill] : [])],
+    [quickPill]
+  );
 
   /** Maintain blocks of restaurant cards, each anchored after the message present at creation time */
   const [cardBlocks, setCardBlocks] = useState<
@@ -77,6 +121,129 @@ export default function ChatScreen() {
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 120);
   };
 
+  // Voice message items that appear in the chat list
+  type VoiceItem = {
+    key: string;
+    afterIndex: number;
+    uri: string;
+    durationMs: number;
+  };
+  const [voiceBlocks, setVoiceBlocks] = useState<VoiceItem[]>([]);
+
+  async function startRecording() {
+    try {
+      // Guard so we don’t double-start
+      if (recording || isRecording) return;
+
+      const perm = await Audio.requestPermissionsAsync();
+      if (!perm.granted) return;
+
+      const mode: any = {
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+      };
+      if (
+        Platform.OS === "ios" &&
+        (InterruptionModeIOS as any)?.DoNotMix != null
+      ) {
+        mode.interruptionModeIOS = (InterruptionModeIOS as any).DoNotMix;
+      }
+      await Audio.setAudioModeAsync(mode);
+
+      const rec = new Audio.Recording();
+      await rec.prepareToRecordAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+      await rec.startAsync();
+
+      setRecording(rec);
+      setIsRecording(true);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    } catch (e) {
+      console.warn("startRecording error:", e);
+    }
+  }
+
+  async function transcribeAndSend(uri: string) {
+    try {
+      setIsTranscribing(true);
+
+      const filename = uri.split("/").pop() ?? "audio.m4a";
+      const form = new FormData();
+      form.append("file", {
+        uri,
+        name: filename,
+        type: "audio/m4a", // iOS m4a from HIGH_QUALITY preset
+      } as any);
+
+      const res = await fetch(`${API_BASE}/transcribe`, {
+        method: "POST",
+        // DO NOT set Content-Type here; let fetch set the multipart boundary.
+        body: form,
+      });
+
+      const json = await res.json();
+      const text: string = json?.text || json?.transcript || "";
+
+      if (text) {
+        if (!hasStarted) setHasStarted(true);
+        sendMessage(text);
+      } else {
+        console.warn("No transcript returned");
+      }
+    } catch (e) {
+      console.warn("transcribe error:", e);
+    } finally {
+      setIsTranscribing(false);
+    }
+  }
+  const stoppingRef = useRef(false);
+
+  async function stopRecording() {
+    if (!recording || stoppingRef.current) return;
+    stoppingRef.current = true;
+
+    try {
+      try {
+        await recording.stopAndUnloadAsync();
+      } catch {
+        // already stopped is fine
+      }
+
+      const status = await recording.getStatusAsync();
+      const uri = recording.getURI() || "";
+      const durationMs = (status as any)?.durationMillis ?? 0;
+
+      setRecording(null);
+      setIsRecording(false);
+
+      if (uri) {
+        // optional: keep the bubble you already add
+        // const afterIndex = Math.max(0, messages.length - 1);
+        // setVoiceBlocks((prev) => [
+        //   ...prev,
+        //   { key: `voice-${Date.now()}-${prev.length}`, afterIndex, uri, durationMs },
+        // ]);
+
+        await transcribeAndSend(uri); // <-- await so we can clean up audio mode afterwards
+      }
+    } catch (e) {
+      console.warn("stopRecording error:", e);
+    } finally {
+      // release audio mode on iOS so other audio resumes normally
+      try {
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: false,
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,
+        } as any);
+      } catch {}
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      stoppingRef.current = false;
+    }
+  }
+
   // Append a new card block when restaurantCards changes (avoid duplicate inserts)
   useEffect(() => {
     if (!restaurantCards || restaurantCards.length === 0) return;
@@ -92,7 +259,7 @@ export default function ChatScreen() {
     if (sig === lastSignature.current) return;
     lastSignature.current = sig;
 
-    const afterIndex = messages.length - 1; // anchor after the latest AI message now
+    const afterIndex = messages.length - 1;
     setCardBlocks((prev) => [
       ...prev,
       {
@@ -105,7 +272,6 @@ export default function ChatScreen() {
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   }, [restaurantCards, messages.length]);
 
-  // Type-out intro from the first AI message
   useEffect(() => {
     if (!hasStarted && messages.length > 0) {
       const full = messages[0].content;
@@ -132,7 +298,6 @@ export default function ChatScreen() {
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
-  // Map: messageIndex -> list of blocks to insert after it
   const blocksByAfterIndex = useMemo(() => {
     const map = new Map<number, Array<{ key: string; cards: Card[] }>>();
     for (const b of cardBlocks) {
@@ -142,26 +307,49 @@ export default function ChatScreen() {
     return map;
   }, [cardBlocks]);
 
-  // Merge messages with their card blocks
+  const voicesByAfterIndex = useMemo(() => {
+    const m = new Map<number, VoiceItem[]>();
+    for (const v of voiceBlocks) {
+      if (!m.has(v.afterIndex)) m.set(v.afterIndex, []);
+      m.get(v.afterIndex)!.push(v);
+    }
+    return m;
+  }, [voiceBlocks]);
+
+  // const chatData: ChatItem[] = useMemo(() => {
+  //   const items: ChatItem[] = [];
+  //   messages.forEach((m, i) => {
+  //     items.push({ type: "message", key: `msg-${i}`, message: m });
+  //     const blocks = blocksByAfterIndex.get(i);
+  //     if (blocks && blocks.length) {
+  //       for (const b of blocks) {
+  //         items.push({ type: "cards", key: b.key, cards: b.cards });
+  //       }
+  //     }
+  //   });
+  //   return items;
+  // }, [messages, blocksByAfterIndex]);
+
   const chatData: ChatItem[] = useMemo(() => {
     const items: ChatItem[] = [];
     messages.forEach((m, i) => {
       items.push({ type: "message", key: `msg-${i}`, message: m });
+
       const blocks = blocksByAfterIndex.get(i);
-      if (blocks && blocks.length) {
-        for (const b of blocks) {
+      if (blocks) {
+        for (const b of blocks)
           items.push({ type: "cards", key: b.key, cards: b.cards });
-        }
       }
+
+      const vbs = voicesByAfterIndex.get(i) || [];
+      for (const v of vbs) items.push({ type: "voice", key: v.key });
     });
     return items;
-  }, [messages, blocksByAfterIndex]);
+  }, [messages, blocksByAfterIndex, voicesByAfterIndex]);
 
-  // Only the most recent card block should be interactive
   const latestBlockKey = cardBlocks.length
     ? cardBlocks[cardBlocks.length - 1].key
     : null;
-
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -198,19 +386,49 @@ export default function ChatScreen() {
                 {displayedText}
               </Text>
 
-              {/* Quick-access pills (re-added) */}
+              {/* Quick-access pills */}
               <QuickPills
-                items={mockQuickTexts} // today: static list
+                items={pills}
                 bottomOffset={INPUT_BOTTOM + INPUT_BAR_HEIGHT + QUICK_GAP}
-                onPress={(txt) => {
+                onPress={async (txt) => {
+                  if (/nearby/i.test(txt)) {
+                    if (!hasStarted) setHasStarted(true);
+                    if (!loading) {
+                      await Haptics.impactAsync(
+                        Haptics.ImpactFeedbackStyle.Medium
+                      );
+                      await showNearbyOptions();
+                      setTimeout(
+                        () =>
+                          flatListRef.current?.scrollToEnd({ animated: true }),
+                        120
+                      );
+                    }
+                    return;
+                  }
+
+                  if (/surprise/i.test(txt)) {
+                    // 👈 NEW
+                    if (!hasStarted) setHasStarted(true);
+                    if (!loading) {
+                      await Haptics.impactAsync(
+                        Haptics.ImpactFeedbackStyle.Medium
+                      );
+                      await showSurpriseMe();
+                      setTimeout(
+                        () =>
+                          flatListRef.current?.scrollToEnd({ animated: true }),
+                        120
+                      );
+                    }
+                    return;
+                  }
+
                   sendNow(txt);
-                  // optional: auto-send
-                  // setHasStarted(true); sendMessage(txt);
                 }}
               />
             </>
           ) : (
-            // Chat history + injected restaurant card blocks
             <View
               style={[
                 styles.chatContainer,
@@ -231,9 +449,33 @@ export default function ChatScreen() {
                       <ChatBubble
                         content={item.message.content}
                         role={item.message.role}
+                        buttons={item.message.buttons}
+                        onButtonPress={(val) => handleAssistantButton(val)} // 👈 from the hook
                       />
                     );
                   }
+                  if (item.type === "voice") {
+                    const vb = voiceBlocks.find((v) => v.key === item.key);
+                    if (!vb) return null;
+                    return (
+                      <View
+                        style={{
+                          paddingHorizontal: 16,
+                          marginVertical: 6,
+                          alignItems: "flex-end",
+                        }}
+                      >
+                        <View style={styles.voiceBubble}>
+                          <VoiceBubble
+                            uri={vb.uri}
+                            durationMs={vb.durationMs}
+                          />
+                        </View>
+                      </View>
+                    );
+                  }
+
+                  // item.type === "cards"
                   const isLatest = item.key === latestBlockKey;
                   return (
                     <View style={styles.cardBlock}>
@@ -281,12 +523,34 @@ export default function ChatScreen() {
               returnKeyType="send"
               editable={!loading}
             />
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.sendButton}
               onPress={onSend}
               disabled={loading}
             >
               <Ionicons name="arrow-up" size={18} color="#FFF" />
+            </TouchableOpacity> */}
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                (isRecording || isTranscribing) && styles.sendButtonRecording,
+              ]}
+              onPress={() => {
+                if (isRecording || isTranscribing) return;
+                onSend();
+              }}
+              onLongPress={startRecording}
+              onPressOut={stopRecording}
+              delayLongPress={300}
+              disabled={loading || isTranscribing}
+            >
+              <Ionicons
+                name={
+                  isRecording ? "mic" : isTranscribing ? "time" : "arrow-up"
+                }
+                size={18}
+                color="#FFF"
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -334,7 +598,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
 
-  // Quick pills (same look as before)
   quickScrollWrapper: {
     position: "absolute",
     left: 0,
@@ -363,7 +626,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
 
-  // Card block row under a message
   cardBlock: {
     height: 180,
     marginVertical: 8,
@@ -388,5 +650,27 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 10,
     marginLeft: 8,
+  },
+  voiceBubble: {
+    maxWidth: "80%",
+    backgroundColor: "#E0F7FA",
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  voiceInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  voiceText: {
+    color: "#000",
+    fontWeight: "600",
+  },
+  sendButtonRecording: {
+    backgroundColor: "#E53935",
   },
 });
