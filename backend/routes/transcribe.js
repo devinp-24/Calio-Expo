@@ -10,6 +10,9 @@ const OpenAI = require("openai");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// Node 18 polyfill for OpenAI uploads:
+
+
 router.post("/", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No file" });
