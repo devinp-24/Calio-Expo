@@ -18,7 +18,8 @@ import {
   Platform,
   FlatList,
   KeyboardAvoidingView,
-  ScrollView,
+  Animated,
+  Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -42,15 +43,7 @@ const QUICK_GAP = 8; // ← spacing above input for quick pills
 
 const { extra } =
   (Constants as any).manifest2 ?? (Constants as any).expoConfig ?? {};
-const API_BASE: string = extra?.API_BASE ?? "http://172.20.10.3:3001/api";
-
-// Quick-access mock texts (same as original)
-// const mockQuickTexts = [
-//   "What's for dinner?",
-//   "Lunch ideas?",
-//   "Local delivery finds",
-//   "Dinner for two?",
-// ];
+const API_BASE: string = extra?.API_BASE ?? "http://192.168.1.81:3001/api";
 
 type Card = {
   name: string;
@@ -62,7 +55,8 @@ type Card = {
 type ChatItem =
   | { type: "message"; key: string; message: Message }
   | { type: "cards"; key: string; cards: Card[] }
-  | { type: "voice"; key: string }; // details are looked up from voiceBlocks by key
+  | { type: "voice"; key: string }
+  | { type: "typing"; key: string }; // 👈 typing indicator item
 
 const VoiceBubble: React.FC<{ uri: string; durationMs: number }> = ({
   uri,
@@ -73,6 +67,52 @@ const VoiceBubble: React.FC<{ uri: string; durationMs: number }> = ({
     <View style={styles.voiceInner}>
       <Ionicons name="mic" size={16} color="#000" />
       <Text style={styles.voiceText}>{secs}s voice</Text>
+    </View>
+  );
+};
+
+/** Three bouncing dots in a left-aligned (assistant) orange bubble */
+const TypingBubble: React.FC = () => {
+  const dot1 = useRef(new Animated.Value(0.2)).current;
+  const dot2 = useRef(new Animated.Value(0.2)).current;
+  const dot3 = useRef(new Animated.Value(0.2)).current;
+
+  const animateDot = (val: Animated.Value, delay: number) => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(val, {
+          toValue: 1,
+          duration: 300,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(val, {
+          toValue: 0.2,
+          duration: 300,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  };
+
+  useEffect(() => {
+    animateDot(dot1, 0);
+    animateDot(dot2, 150);
+    animateDot(dot3, 300);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <View style={styles.typingWrapper}>
+      <View style={[styles.bubble, styles.bubbleBot, styles.typingBubble]}>
+        <View style={styles.typingRow}>
+          <Animated.View style={[styles.typingDot, { opacity: dot1 }]} />
+          <Animated.View style={[styles.typingDot, { opacity: dot2 }]} />
+          <Animated.View style={[styles.typingDot, { opacity: dot3 }]} />
+        </View>
+      </View>
     </View>
   );
 };
@@ -89,6 +129,7 @@ export default function ChatScreen() {
     showSurpriseMe,
     orderWithApp,
     handleAssistantButton,
+    resetChat,
   } = useChat();
 
   const [draft, setDraft] = useState("");
@@ -111,6 +152,45 @@ export default function ChatScreen() {
   >([]);
   const lastSignature = useRef<string | null>(null);
 
+  const handleNewChat = useCallback(async () => {
+    // stop any in-progress recording
+    try {
+      if (recording) {
+        try {
+          await recording.stopAndUnloadAsync();
+        } catch {}
+        setRecording(null);
+        setIsRecording(false);
+      }
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+      } as any);
+    } catch {}
+
+    // light haptic feedback
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch {}
+
+    // clear local UI state
+    setDraft("");
+    setHasStarted(false);
+    setDisplayedText("");
+    setCardBlocks([]);
+    setVoiceBlocks([]);
+    lastSignature.current = null;
+
+    // clear hook state (messages -> [] so your greeting effect runs again)
+    resetChat();
+
+    // snap list back to top (optional)
+    setTimeout(() => {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+    }, 0);
+  }, [recording, resetChat]);
+
   const sendNow = (text: string) => {
     const t = text.trim();
     if (!t || loading) return;
@@ -132,7 +212,6 @@ export default function ChatScreen() {
 
   async function startRecording() {
     try {
-      // Guard so we don’t double-start
       if (recording || isRecording) return;
 
       const perm = await Audio.requestPermissionsAsync();
@@ -174,12 +253,11 @@ export default function ChatScreen() {
       form.append("file", {
         uri,
         name: filename,
-        type: "audio/m4a", // iOS m4a from HIGH_QUALITY preset
+        type: "audio/m4a",
       } as any);
 
       const res = await fetch(`${API_BASE}/transcribe`, {
         method: "POST",
-        // DO NOT set Content-Type here; let fetch set the multipart boundary.
         body: form,
       });
 
@@ -219,19 +297,11 @@ export default function ChatScreen() {
       setIsRecording(false);
 
       if (uri) {
-        // optional: keep the bubble you already add
-        // const afterIndex = Math.max(0, messages.length - 1);
-        // setVoiceBlocks((prev) => [
-        //   ...prev,
-        //   { key: `voice-${Date.now()}-${prev.length}`, afterIndex, uri, durationMs },
-        // ]);
-
-        await transcribeAndSend(uri); // <-- await so we can clean up audio mode afterwards
+        await transcribeAndSend(uri);
       }
     } catch (e) {
       console.warn("stopRecording error:", e);
     } finally {
-      // release audio mode on iOS so other audio resumes normally
       try {
         await Audio.setAudioModeAsync({
           allowsRecordingIOS: false,
@@ -316,20 +386,6 @@ export default function ChatScreen() {
     return m;
   }, [voiceBlocks]);
 
-  // const chatData: ChatItem[] = useMemo(() => {
-  //   const items: ChatItem[] = [];
-  //   messages.forEach((m, i) => {
-  //     items.push({ type: "message", key: `msg-${i}`, message: m });
-  //     const blocks = blocksByAfterIndex.get(i);
-  //     if (blocks && blocks.length) {
-  //       for (const b of blocks) {
-  //         items.push({ type: "cards", key: b.key, cards: b.cards });
-  //       }
-  //     }
-  //   });
-  //   return items;
-  // }, [messages, blocksByAfterIndex]);
-
   const chatData: ChatItem[] = useMemo(() => {
     const items: ChatItem[] = [];
     messages.forEach((m, i) => {
@@ -344,12 +400,21 @@ export default function ChatScreen() {
       const vbs = voicesByAfterIndex.get(i) || [];
       for (const v of vbs) items.push({ type: "voice", key: v.key });
     });
+
+    // Show typing bubble while assistant is thinking.
+    // Optional refinement: only show if the last message is from the user.
+    const lastIsUser = messages[messages.length - 1]?.role === "user";
+    if (loading && lastIsUser) {
+      items.push({ type: "typing", key: "typing" });
+    }
+
     return items;
-  }, [messages, blocksByAfterIndex, voicesByAfterIndex]);
+  }, [messages, blocksByAfterIndex, voicesByAfterIndex, loading]);
 
   const latestBlockKey = cardBlocks.length
     ? cardBlocks[cardBlocks.length - 1].key
     : null;
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -362,8 +427,12 @@ export default function ChatScreen() {
           <TouchableOpacity>
             <Ionicons name="time-outline" size={24} color="#000" />
           </TouchableOpacity>
-          <TouchableOpacity>
-            <Ionicons name="share-outline" size={24} color="#000" />
+          <TouchableOpacity onPress={handleNewChat}>
+            <Ionicons
+              name="chatbubble-ellipses-outline"
+              size={24}
+              color="#000"
+            />
           </TouchableOpacity>
         </View>
 
@@ -408,7 +477,6 @@ export default function ChatScreen() {
                   }
 
                   if (/surprise/i.test(txt)) {
-                    // 👈 NEW
                     if (!hasStarted) setHasStarted(true);
                     if (!loading) {
                       await Haptics.impactAsync(
@@ -450,7 +518,7 @@ export default function ChatScreen() {
                         content={item.message.content}
                         role={item.message.role}
                         buttons={item.message.buttons}
-                        onButtonPress={(val) => handleAssistantButton(val)} // 👈 from the hook
+                        onButtonPress={(val) => handleAssistantButton(val)}
                       />
                     );
                   }
@@ -473,6 +541,9 @@ export default function ChatScreen() {
                         </View>
                       </View>
                     );
+                  }
+                  if (item.type === "typing") {
+                    return <TypingBubble />;
                   }
 
                   // item.type === "cards"
@@ -523,13 +594,6 @@ export default function ChatScreen() {
               returnKeyType="send"
               editable={!loading}
             />
-            {/* <TouchableOpacity
-              style={styles.sendButton}
-              onPress={onSend}
-              disabled={loading}
-            >
-              <Ionicons name="arrow-up" size={18} color="#FFF" />
-            </TouchableOpacity> */}
             <TouchableOpacity
               style={[
                 styles.sendButton,
@@ -672,5 +736,51 @@ const styles = StyleSheet.create({
   },
   sendButtonRecording: {
     backgroundColor: "#E53935",
+  },
+
+  // Typing bubble styles
+  typingWrapper: {
+    paddingHorizontal: 16,
+    marginVertical: 6,
+    alignItems: "flex-start", // left like assistant
+  },
+  typingBubble: {
+    backgroundColor: "#FFE7D2", // light orange
+  },
+  typingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  typingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FF5A1F", // brand orange dot color
+  },
+
+  // Reuse from ChatBubble visual for assistant bubble
+  bubble: {
+    maxWidth: "80%",
+    padding: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 2, height: 3 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  bubbleBot: {
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    borderBottomRightRadius: 18,
+    borderBottomLeftRadius: 4,
+    backgroundColor: "#FFF3E0",
+    alignSelf: "flex-start",
   },
 });

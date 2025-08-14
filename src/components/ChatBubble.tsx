@@ -95,7 +95,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
   onButtonPress,
 }) => {
   const isUser = role === "user";
-  const author = isUser ? "You" : "Calio";
+  const author = isUser ? "You" : "Boons AI";
 
   return (
     <View style={styles.wrapper}>
@@ -125,9 +125,9 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
             {buttons.map((b, idx) => {
               // color by vendor; default to dark button
               const vendor =
-                b.value && (VENDOR as any)[b.value as keyof typeof VENDOR] ? 
-                (VENDOR as any)[b.value as keyof typeof VENDOR] : 
-                null;
+                b.value && (VENDOR as any)[b.value as keyof typeof VENDOR]
+                  ? (VENDOR as any)[b.value as keyof typeof VENDOR]
+                  : null;
               const bg = vendor?.bg ?? "#111";
               const fg = vendor?.fg ?? "#FFF";
 
@@ -148,8 +148,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
                       return openVendorApp("uber-eats");
                     if (b.value === "doordash")
                       return openVendorApp("doordash");
-                    if (b.value === "boons") 
-                      return openVendorApp("boons");
+                    if (b.value === "boons") return openVendorApp("boons");
                     if (b.url) return Linking.openURL(b.url);
                   }}
                 >

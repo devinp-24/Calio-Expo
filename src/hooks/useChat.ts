@@ -35,8 +35,9 @@ const VENDOR = {
   boons: {
     label: "Boons",
     scheme: "boons://",
-    iosStore: "https://apps.apple.com/us/app/boons-local-food-delivery/id6504396870", 
-    androidStore: "market://details?id=com.boons.boons", 
+    iosStore:
+      "https://apps.apple.com/us/app/boons-local-food-delivery/id6504396870",
+    androidStore: "market://details?id=com.boons.boons",
     androidStoreWeb: "https://www.boons.io/order",
   },
 } as const;
@@ -92,7 +93,7 @@ type Memory = {
 };
 
 const { extra } = Constants.manifest2 ?? Constants.expoConfig ?? {};
-const API_BASE: string = extra?.API_BASE ?? "http://172.20.10.3:3001/api";
+const API_BASE: string = extra?.API_BASE ?? "http://192.168.1.81:3001/api";
 
 export function useChat() {
   const pageRef = useRef(0);
@@ -101,7 +102,8 @@ export function useChat() {
   const { username } = useAuth();
 
   const extractor = new OpenAI({
-    apiKey: "",
+    apiKey:
+      "",
     dangerouslyAllowBrowser: true,
   });
   const [quickPill, setQuickPill] = useState<string | null>(null);
@@ -293,14 +295,12 @@ No bullet points. Keep it breezy and simple.
   async function handleAssistantButton(value?: string) {
     if (!value) return;
 
-    
     if (value === "uber-eats" || value === "doordash" || value === "boons") {
-    return orderWithApp(value as VendorKey); 
-  }
+      return orderWithApp(value as VendorKey);
+    }
 
     // Service-type buttons → reuse your pipeline
     if (value === "delivery" || value === "pickup" || value === "dine-in") {
-      
       // This will append a user bubble and trigger the existing logic
       return sendMessage(
         value === "dine-in"
@@ -312,7 +312,21 @@ No bullet points. Keep it breezy and simple.
     // fallback: treat as a simple user reply
     return sendMessage(value);
   }
-
+  function resetChat() {
+    // clear hook state
+    setMessages([]); // triggers your initial greeting effect
+    setLoading(false);
+    setAskedService(false);
+    setSuggestionsShown(false);
+    setRestaurantOptions([]);
+    setSelectedRestaurant(null);
+    setRestaurantCards([]);
+    setSuggestions([]);
+    // clear refs/pagination
+    allRestaurantsRef.current = [];
+    fullOptionsRef.current = [];
+    pageRef.current = 0;
+  }
   async function askServiceType(cuisine: string, history: Message[]) {
     setAskedService(true);
     setLoading(true);
@@ -1021,5 +1035,6 @@ Respond with ONLY the JSON object—no extra text.
     showSurpriseMe,
     orderWithApp,
     handleAssistantButton,
+    resetChat,
   };
 }
