@@ -181,7 +181,7 @@ import { jwtDecode } from "jwt-decode";
 import Constants from "expo-constants";
 
 const { extra } = Constants.manifest2 ?? Constants.expoConfig ?? {};
-const API_BASE = extra?.API_BASE ?? "http://192.168.3.142:3001/api";
+const API_BASE = extra?.API_BASE ?? "http://128.189.248.168:3001/api";
 
 type TokenPayload = {
   exp: number;

@@ -57,3 +57,8 @@ amplifytools.xcconfig
 .secret-*
 **.sample
 #amplify-do-not-edit-end
+
+# Secrets
+.env
+backend/.env
+*.env

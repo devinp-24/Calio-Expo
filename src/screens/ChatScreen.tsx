@@ -35,7 +35,7 @@ const INPUT_BAR_HEIGHT = Platform.OS === "ios" ? 56 : 48;
 const QUICK_GAP = 8; // ← spacing above input for quick pills
 
 const { extra } = (Constants as any).manifest2 ?? (Constants as any).expoConfig ?? {};
-const API_BASE: string = extra?.API_BASE ?? "http://192.168.3.142:3001/api";
+const API_BASE: string = extra?.API_BASE ?? "http://128.189.248.168:3001/api";
 
 
 
